@@ -15,7 +15,7 @@ export interface Course {
 export const courses: Course[] = [
   {
     name: "Basic Tailoring Course",
-    duration: "3 months",
+    duration: "6 months",
     fee: {
       admission: "₹400",
       monthly: "₹500",

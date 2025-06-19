@@ -71,4 +71,14 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Ensure smooth scrolling and prevent layout shifts */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Prevent horizontal overflow */
+  body {
+    overflow-x: hidden;
+  }
 }

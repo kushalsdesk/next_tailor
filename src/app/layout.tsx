@@ -1,3 +1,4 @@
+import type React from "react";
 import type { Metadata } from "next";
 import "./globals.css";
 import { Lora, Raleway } from "next/font/google";
@@ -6,6 +7,7 @@ import Footer from "@/components/core/Footer";
 import Background from "@/components/svgs/Background.svgs";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/react";
+import { Suspense } from "react";
 
 const lora = Lora({
   subsets: ["latin"],
@@ -61,14 +63,15 @@ export default function RootLayout({
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </head>
-      <body className="antialiased flex flex-col ">
-        <Navbar />
-        <Background />
-
-        {children}
-        <SpeedInsights />
-        <Analytics />
-        <Footer />
+      <body className="antialiased flex flex-col min-h-screen">
+        <Suspense fallback={<div>Loading...</div>}>
+          <Background />
+          <Navbar />
+          {children}
+          <SpeedInsights />
+          <Analytics />
+          <Footer />
+        </Suspense>
       </body>
     </html>
   );

@@ -13,12 +13,30 @@ const Background = () => {
     if (!ctx) return;
 
     const handleResize = () => {
+      // Use the full document height instead of just viewport height
+      const documentHeight = Math.max(
+        document.documentElement.scrollHeight,
+        document.documentElement.offsetHeight,
+        document.documentElement.clientHeight,
+        window.innerHeight,
+      );
+
       canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      canvas.height = documentHeight;
       draw();
     };
 
+    // Initial setup
     window.addEventListener("resize", handleResize);
+
+    // Also listen for content changes that might affect document height
+    const resizeObserver = new ResizeObserver(() => {
+      handleResize();
+    });
+
+    resizeObserver.observe(document.body);
+
+    // Initial call
     handleResize();
 
     function draw() {
@@ -26,6 +44,7 @@ const Background = () => {
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+      // Use canvas dimensions for gradient calculations
       const mainGradient = ctx.createRadialGradient(
         canvas.width * 0.8,
         canvas.height * 0.2,
@@ -67,23 +86,16 @@ const Background = () => {
 
     draw();
 
-    let animationFrameId: number;
-    const animate = () => {
-      draw();
-      animationFrameId = window.requestAnimationFrame(animate);
-    };
-    animate();
-
     return () => {
       window.removeEventListener("resize", handleResize);
-      window.cancelAnimationFrame(animationFrameId);
+      resizeObserver.disconnect();
     };
   }, []);
 
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 w-full h-full -z-10"
+      className="fixed inset-0 w-full -z-10"
       style={{
         pointerEvents: "none",
         position: "fixed",
@@ -93,6 +105,7 @@ const Background = () => {
         bottom: 0,
         zIndex: -10,
         background: "#09090b", // zinc-950 equivalent
+        minHeight: "100vh", // Fallback for very short content
       }}
       aria-hidden="true"
     />
