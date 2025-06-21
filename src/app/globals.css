@@ -35,7 +35,11 @@
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
+
+    /* Custom viewport height property for mobile browsers */
+    --vh: 1vh;
   }
+
   .dark {
     --background: 0 0% 3.9%;
     --foreground: 0 0% 98%;
@@ -68,8 +72,13 @@
   * {
     @apply border-border;
   }
+
+  html,
   body {
     @apply bg-background text-foreground;
+    /* Prevent the white vacuum issue on mobile */
+    min-height: 100vh;
+    min-height: calc(var(--vh, 1vh) * 100);
   }
 
   /* Ensure smooth scrolling */
@@ -80,12 +89,32 @@
   /* Prevent horizontal overflow */
   body {
     overflow-x: hidden;
+    /* Additional mobile optimizations */
+    position: relative;
   }
 
   /* Mobile optimizations */
   @media (max-width: 768px) {
     body {
       -webkit-overflow-scrolling: touch;
+      /* Prevent bounce scrolling on iOS */
+      overscroll-behavior: none;
     }
+
+    /* Ensure background covers full viewport on mobile */
+    html {
+      height: -webkit-fill-available;
+    }
+
+    body {
+      min-height: -webkit-fill-available;
+    }
+  }
+}
+
+/* Additional utility for mobile viewport handling */
+@supports (-webkit-touch-callout: none) {
+  .min-h-screen {
+    min-height: -webkit-fill-available;
   }
 }

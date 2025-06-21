@@ -85,7 +85,7 @@ const Navbar = () => {
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.2, ease: "easeOut" }}
-        className="fixed md:bg-[#221F39]/40  backdrop-blur-md text-[#F0C38E] z-10 w-full shadow-lg"
+        className="fixed md:bg-[#1a0129]/40  backdrop-blur-md text-[#F0C38E] z-10 w-full shadow-lg"
       >
         <motion.nav className="container mx-auto px-2">
           <div className="flex justify-between items-center h-20">
@@ -158,7 +158,7 @@ const Navbar = () => {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
                       transition={{ duration: 0.2 }}
-                      className="absolute top-full right-0 mt-2 bg-[#221F39]/90 backdrop-blur-md rounded-md  z-50 md:min-w-[450px] border border-[#F0C38E]/20"
+                      className="absolute top-full right-0 mt-2 bg-[#110016]/90 backdrop-blur-md rounded-md  z-50 md:min-w-[450px] border border-[#F0C38E]/20"
                     >
                       <div className="p-3 flex flex-col">
                         {navItems.items.map((subItem, index) => (

@@ -165,7 +165,7 @@ const Courses = () => {
           </div>
           <DropdownMenuContent
             align="end"
-            className="w-[200px] bg-[#221F39] text-[#F0C38E] font-semibold"
+            className="w-[200px] bg-[#110016]/80 backdrop-blur-md text-[#F0C38E] font-semibold border border-[#F0C38E]/20"
           >
             <DropdownMenuItem>
               <span>Admission: {course.fee.admission}</span>
