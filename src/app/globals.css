@@ -72,7 +72,7 @@
     @apply bg-background text-foreground;
   }
 
-  /* Ensure smooth scrolling and prevent layout shifts */
+  /* Ensure smooth scrolling */
   html {
     scroll-behavior: smooth;
   }
@@ -80,5 +80,12 @@
   /* Prevent horizontal overflow */
   body {
     overflow-x: hidden;
+  }
+
+  /* Mobile optimizations */
+  @media (max-width: 768px) {
+    body {
+      -webkit-overflow-scrolling: touch;
+    }
   }
 }
