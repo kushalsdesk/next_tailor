@@ -64,21 +64,6 @@ const EnrollmentForm: React.FC<EnrollmentFormProps> = ({
 
   return (
     <>
-      <div
-        className={`mt-4 p-4 bg-[#1a1a1c] rounded-md border border-[#9370DB]/30 transition-all duration-300 ${
-          isOpen ? "block" : "hidden"
-        } md:static md:block`}
-      >
-        <FormContent
-          course={course}
-          onSubmit={onSubmit}
-          onCancel={onCancel}
-          headerRef={headerRef}
-          isSubmitting={isSubmitting}
-          progress={progress}
-        />
-      </div>
-
       {isOpen && (
         <div
           className="fixed inset-0 bg-black/30 backdrop-blur-md flex items-center justify-center z-50"
