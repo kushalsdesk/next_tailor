@@ -1,10 +1,12 @@
 "use client";
 
 import { useRef, useState } from "react";
+
 import { motion, AnimatePresence } from "framer-motion";
 import { Briefcase, CheckCircle, GraduationCap, Users, Clock, Target, Scissors, ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useDataStore } from "@/store/useDataStore";
 
 const testimonials = [
   { quote: "The best tailoring institute! I started my own boutique within 6 months.", author: "Priya S." },
@@ -53,11 +55,11 @@ const features = [
   },
 ];
 
-const galleryImages = ["/sample.jpeg", "/images/image1.jpeg", "/images/image2.jpeg"];
-
 const About = () => {
   const sectionRef = useRef<HTMLElement>(null);
   const [currentImg, setCurrentImg] = useState(0);
+
+  const galleryImages = useDataStore((state) => state.galleryImages);
 
   const nextImg = () => setCurrentImg((prev) => (prev + 1) % galleryImages.length);
   const prevImg = () => setCurrentImg((prev) => (prev - 1 + galleryImages.length) % galleryImages.length);

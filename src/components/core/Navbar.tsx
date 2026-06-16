@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, Menu, X, Phone, Mail, Clock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useUIStore } from "@/store/useUIStore";
 
 type NavItem = {
   title: string;
@@ -36,11 +37,12 @@ const timings: NavItem = {
 
 const Navbar = () => {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [activeMobileSection, setActiveMobileSection] = useState<string | null>(
-    null,
-  );
+  const [activeMobileSection, setActiveMobileSection] = useState<string | null>(null);
   const [showLogo, setShowLogo] = useState(true);
+
+  const isMobileMenuOpen = useUIStore((state) => state.isMobileMenuOpen);
+  const setMobileMenuOpen = useUIStore((state) => state.setMobileMenuOpen);
+  const toggleMobileMenuState = useUIStore((state) => state.toggleMobileMenu);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -54,8 +56,8 @@ const Navbar = () => {
   };
 
   const toggleMobileMenu = () => {
-    setMobileMenuOpen(!mobileMenuOpen);
-    if (mobileMenuOpen) setActiveMobileSection(null);
+    toggleMobileMenuState();
+    if (!isMobileMenuOpen) setActiveMobileSection(null);
   };
 
   const toggleMobileSection = (title: string) => {
@@ -203,7 +205,7 @@ const Navbar = () => {
               className="lg:hidden text-foreground hover:bg-secondary hover:text-primary"
               onClick={toggleMobileMenu}
             >
-              {mobileMenuOpen ? (
+              {isMobileMenuOpen ? (
                 <X className="h-7 w-7" />
               ) : (
                 <Menu className="h-7 w-7" />
@@ -215,7 +217,7 @@ const Navbar = () => {
 
       {/* Mobile Navigation - Solid Full Screen */}
       <AnimatePresence>
-        {mobileMenuOpen && (
+        {isMobileMenuOpen && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
