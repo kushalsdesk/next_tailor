@@ -2,30 +2,27 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { ChevronDown } from "lucide-react";
-import EnrollmentForm, {
-  EnrollmentFormValues,
-} from "@/components/modals/EnrollmentForm.modal";
-import SyllabusModal from "@/components/modals/Syllabus.modal";
-import { courses, diplomaCourse, type Course } from "@/lib/CourseData";
+import EnrollmentForm, { EnrollmentFormValues } from "@/components/modals/EnrollmentForm.modal";
+import { courses, diplomaCourse } from "@/lib/CourseData";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
+import { ChevronRight, CheckCircle2, Clock, IndianRupee, BookOpen, ScrollText } from "lucide-react";
+
+const allCourses = [...courses, diplomaCourse];
 
 const Courses = () => {
-  const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
-  const [showSyllabus, setShowSyllabus] = useState<string | null>(null);
+  const [selectedCourse, setSelectedCourse] = useState(allCourses[0]);
+  const [activeTab, setActiveTab] = useState<"syllabus" | "enroll">("syllabus");
   const [progress, setProgress] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const sectionRef = useRef<HTMLElement>(null);
+
+  // Reset tab when course changes
+  useEffect(() => {
+    setActiveTab("syllabus");
+  }, [selectedCourse]);
 
   useEffect(() => {
     if (sectionRef.current) {
@@ -36,323 +33,225 @@ const Courses = () => {
       if (window.location.hash === "#courses" && sectionRef.current) {
         const headerHeight = 80;
         const yOffset = -headerHeight;
-        const y =
-          sectionRef.current.getBoundingClientRect().top +
-          window.pageYOffset +
-          yOffset;
-
+        const y = sectionRef.current.getBoundingClientRect().top + window.pageYOffset + yOffset;
         window.scrollTo({ top: y, behavior: "smooth" });
       }
     };
 
     window.addEventListener("hashchange", handleHashChange);
-
     if (window.location.hash === "#courses") {
       setTimeout(handleHashChange, 100);
     }
-
-    document.querySelectorAll('a[href="#courses"]').forEach((anchor) => {
-      anchor.addEventListener("click", (e) => {
-        e.preventDefault();
-
-        if (sectionRef.current) {
-          const headerHeight = 80;
-          const yOffset = -headerHeight;
-          const y =
-            sectionRef.current.getBoundingClientRect().top +
-            window.pageYOffset +
-            yOffset;
-
-          window.scrollTo({ top: y, behavior: "smooth" });
-
-          window.history.pushState(null, "", "#courses");
-        }
-      });
-    });
-
-    return () => {
-      window.removeEventListener("hashchange", handleHashChange);
-    };
+    return () => window.removeEventListener("hashchange", handleHashChange);
   }, []);
-
-  const handleEnroll = (courseName: string) => {
-    setSelectedCourse(courseName === selectedCourse ? null : courseName);
-  };
-
-  const handleShowSyllabus = (courseName: string) => {
-    setShowSyllabus(courseName === showSyllabus ? null : courseName);
-  };
 
   const handleSubmit = async (data: EnrollmentFormValues) => {
     setIsSubmitting(true);
     try {
       const interval = setInterval(() => {
-        setProgress((prev) => {
-          if (prev >= 100) {
-            clearInterval(interval);
-            return 100;
-          }
-          return prev + 10;
-        });
+        setProgress((prev) => (prev >= 100 ? 100 : prev + 10));
       }, 500);
 
       const response = await fetch("/api/enroll", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
 
-      if (!response.ok) throw new Error("Failed to submit enrollment");
       clearInterval(interval);
+      if (!response.ok) throw new Error("Failed to submit enrollment");
       setProgress(100);
-    } catch (error) {
+      
+      setActiveTab("syllabus");
+      toast.success("Enrollment Successful!", {
+        description: `You have successfully enrolled for ${selectedCourse.name}. We will connect shortly.`,
+      });
+    } catch {
       setProgress(0);
       toast.error("Failed to submit enrollment. Please try again.");
-      console.error("Enrollment Submission Error:", error);
     } finally {
       setIsSubmitting(false);
-      setSelectedCourse(null);
       setProgress(0);
-      toast.success("Enrollment Successful!", {
-        description: `You have successfully enrolled for ${selectedCourse}, Admin Will Connect Shortly, Stay Tuned`,
-      });
     }
   };
 
-  const handleCancel = () => {
-    setSelectedCourse(null);
-    setShowSyllabus(null);
-  };
-
-  {
-    /*Every Course*/
-  }
-  const renderCourseCard = (course: Course, index: number) => (
-    <motion.div
-      key={index}
-      className="flex flex-grow flex-col text-left md:max-w-[48%] p-4 backdrop-blur-sm bg-white/5 hover:bg-white/10 border border-white/20 hover:border-white/20 rounded-md text-white relative"
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ delay: index * 0.1, duration: 0.6 }}
-    >
-      <CardHeader className="pb-4">
-        <CardTitle>{course.name}</CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col  space-y-2 text-left">
-        <p>
-          <strong className="text-[#F0C38E]">Duration:</strong>{" "}
-          {course.duration}
-        </p>
-        <DropdownMenu>
-          <div className="flex flex-row  items-center justify-between w-full ">
-            <strong className="text-[#F0C38E] text-left  w-full md:hidden">
-              Fee Details:
-            </strong>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="default"
-                className=" w-fit md:w-full text-[#221F39] bg-white/10  border-none justify-center items-center  md:justify-between"
-              >
-                <strong className="text-[#F0C38E] hidden md:block">
-                  Fee Details
-                </strong>
-                <ChevronDown className="h-8 w-8  animate-bounce  text-[#F0C38E]" />
-              </Button>
-            </DropdownMenuTrigger>
-          </div>
-          <DropdownMenuContent
-            align="end"
-            className="w-[200px] bg-[#110016]/80 backdrop-blur-md text-[#F0C38E] font-semibold border border-[#F0C38E]/20"
-          >
-            <DropdownMenuItem>
-              <span>Admission: {course.fee.admission}</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <span>Monthly: {course.fee.monthly}</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <span>Exam: {course.fee.exam}</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <div className="flex space-x-2 pt-4">
-          <Button
-            variant="outline"
-            className="flex-1 text-md font-semibold bg-[#9370DB]/10 text-white border-[#9370DB] hover:text-[#9370DB] shadow-lg shadow-[#9370DB]/30 transition-all duration-300"
-            onClick={() => handleEnroll(course.name)}
-          >
-            Enroll Now
-          </Button>
-          <Button
-            variant="outline"
-            className="flex-1 text-md font-semibold bg-[#F0C38E]/10 text-white border-[#F0C38E] hover:text-[#F0C38E] shadow-lg shadow-[#F0C38E]/30 transition-all duration-300"
-            onClick={() => handleShowSyllabus(course.name)}
-          >
-            Syllabus
-          </Button>
-        </div>
-      </CardContent>
-    </motion.div>
-  );
-  {
-    /*Diploma Course*/
-  }
-  const renderDiplomaCourseCard = () => (
-    <motion.div
-      className="flex flex-grow flex-col text-left md:max-w-[48%] p-4 backdrop-blur-sm bg-white/5 hover:bg-white/10 border border-white/20 hover:border-white/20 rounded-md text-white relative"
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ delay: 0.1, duration: 0.6 }}
-    >
-      <CardHeader className="pb-4">
-        <CardTitle>{diplomaCourse.name}</CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col space-y-2 text-left">
-        <p>
-          <strong className="text-[#F0C38E]">Duration:</strong>{" "}
-          {diplomaCourse.duration}
-        </p>
-        <DropdownMenu>
-          <div className="flex flex-row  items-center justify-between w-full ">
-            <strong className="text-[#F0C38E] text-left  w-full md:hidden">
-              Fee Details:
-            </strong>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="default"
-                className=" w-fit md:w-full text-[#221F39] bg-white/10  border-none justify-center items-center  md:justify-between"
-              >
-                <strong className="text-[#F0C38E] hidden md:block">
-                  Fee Details
-                </strong>
-                <ChevronDown className="h-8 w-8  animate-bounce  text-[#F0C38E]" />
-              </Button>
-            </DropdownMenuTrigger>
-          </div>
-          <DropdownMenuContent
-            align="end"
-            className="w-[200px] bg-[#221F39] text-[#F0C38E] font-semibold"
-          >
-            <DropdownMenuItem>
-              <span>Admission: {diplomaCourse.fee.admission}</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <span>Monthly: {diplomaCourse.fee.monthly}</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <span>Exam: {diplomaCourse.fee.exam}</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <div className="flex space-x-2 pt-4">
-          <Button
-            variant="outline"
-            className="flex-1 text-md font-semibold bg-[#9370DB]/10 text-white border-[#9370DB] hover:text-[#9370DB] shadow-lg shadow-[#9370DB]/30 transition-all duration-300"
-            onClick={() => handleEnroll(diplomaCourse.name)}
-          >
-            Enroll Now
-          </Button>
-          <Button
-            variant="outline"
-            className="flex-1 text-md font-semibold bg-[#F0C38E]/10 text-white border-[#F0C38E] hover:text-[#F0C38E] shadow-lg shadow-[#F0C38E]/30 transition-all duration-300"
-            onClick={() => handleShowSyllabus(diplomaCourse.name)}
-          >
-            Syllabus
-          </Button>
-        </div>
-      </CardContent>
-    </motion.div>
-  );
-
   return (
-    <section ref={sectionRef} className="py-20 backdrop-blur-sm relative">
+    <section ref={sectionRef} className="py-24 bg-background relative border-y border-border">
       {isSubmitting && (
-        <Progress value={100} className="w-full h-1 fixed top-0 left-0 z-50" />
+        <Progress value={progress} className="w-full h-1 fixed top-0 left-0 z-50 rounded-none" />
       )}
 
-      <div className="container mx-auto px-4">
-        <motion.h2
-          className="text-4xl font-bold mb-12 text-center text-[#F0C38E] drop-shadow-[0_0_10px_#F0C38E] sm:drop-shadow-[0_0_15px_#F0C38E]"
+      <div className="container mx-auto px-4 max-w-7xl">
+        <motion.div
+          className="text-center mb-16"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
         >
-          Offered Courses
-        </motion.h2>
-        <div className="flex flex-wrap gap-8 justify-center">
-          {courses.map((course, index) => renderCourseCard(course, index))}
+          <h2 className="text-4xl md:text-5xl font-serif font-bold mb-4 text-foreground">
+            Offered Courses
+          </h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto font-sans text-lg">
+            Explore our carefully curated courses designed to transform your passion into a professional career. Select a course to view its details.
+          </p>
+        </motion.div>
+
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 lg:items-start">
+          {/* Left Column: Course Selection */}
+          <div className="w-full lg:w-1/3 flex flex-col gap-3 lg:sticky lg:top-24">
+            {allCourses.map((course, index) => (
+              <button
+                key={index}
+                onClick={() => setSelectedCourse(course)}
+                className={`w-full text-left px-6 py-5 rounded-xl transition-all duration-300 border flex items-center justify-between group ${
+                  selectedCourse.name === course.name
+                    ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20"
+                    : "bg-card text-card-foreground border-border hover:border-primary/50 hover:bg-secondary"
+                }`}
+              >
+                <span className="font-semibold font-serif text-xl leading-snug">{course.name}</span>
+                <ChevronRight className={`w-5 h-5 shrink-0 transition-transform ${selectedCourse.name === course.name ? "opacity-100" : "opacity-0 group-hover:opacity-50"}`} />
+              </button>
+            ))}
+          </div>
+
+          {/* Right Column: Course Details & Enrollment */}
+          <div className="w-full lg:w-2/3">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={selectedCourse.name}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+                className="bg-card border border-border rounded-2xl p-8 shadow-sm flex flex-col h-full min-h-[500px]"
+              >
+                <div className="mb-8 border-b border-border pb-6 flex flex-col md:flex-row md:items-start justify-between gap-6">
+                  <div>
+                    <h3 className="text-3xl font-serif font-bold text-foreground mb-4">
+                      {selectedCourse.name}
+                    </h3>
+                    <div className="flex flex-wrap gap-6 text-base font-sans font-semibold text-muted-foreground">
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-5 h-5 text-accent" />
+                        <span className="text-foreground">{selectedCourse.duration}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <IndianRupee className="w-5 h-5 text-accent" />
+                        <span>Admission: <span className="text-foreground">{selectedCourse.fee.admission}</span></span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <IndianRupee className="w-5 h-5 text-accent" />
+                        <span>Monthly: <span className="text-foreground">{selectedCourse.fee.monthly}</span></span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <ScrollText className="w-5 h-5 text-accent" />
+                        <span>Exam: <span className="text-foreground">{selectedCourse.fee.exam}</span></span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Dynamic Button toggles between Enroll form and Syllabus */}
+                  <Button 
+                    onClick={() => setActiveTab(activeTab === "syllabus" ? "enroll" : "syllabus")}
+                    className={`w-full md:w-auto px-8 py-6 text-lg font-semibold rounded-xl transition-all font-sans ${
+                      activeTab === "syllabus" 
+                        ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20" 
+                        : "bg-secondary hover:bg-secondary/80 text-foreground border border-border"
+                    }`}
+                  >
+                    {activeTab === "syllabus" ? "Enroll Now" : "Back to Syllabus"}
+                  </Button>
+                </div>
+
+                <div className="flex-1 relative">
+                  <AnimatePresence mode="wait">
+                    {activeTab === "syllabus" ? (
+                      <motion.div
+                        key="syllabus"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <div className="flex items-center gap-2 mb-6">
+                          <BookOpen className="w-5 h-5 text-accent" />
+                          <h4 className="text-xl font-serif font-semibold text-foreground">Course Syllabus</h4>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8">
+                          {/* Normal Course Syllabus */}
+                          {"syllabus" in selectedCourse && Object.entries(selectedCourse.syllabus as Record<string, string[]>).map(([category, items]) => (
+                            <div key={category}>
+                              <h5 className="font-semibold text-primary mb-3 font-sans border-b border-border pb-1 text-lg">{category}</h5>
+                              <ul className="space-y-3">
+                                {items.map((item, idx) => (
+                                  <li key={idx} className="flex items-start gap-2 text-base font-medium text-muted-foreground font-sans">
+                                    <CheckCircle2 className="w-5 h-5 text-accent shrink-0 mt-0.5" />
+                                    <span>{item}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          ))}
+
+                          {/* Diploma Course Semesters */}
+                          {"semesters" in selectedCourse && Object.entries(selectedCourse.semesters as Record<string, Record<string, string[]>>).map(([semester, subjects]) => (
+                            <div key={semester} className="md:col-span-2 mb-2">
+                              <h5 className="font-bold text-primary mb-4 font-sans text-xl border-b border-border pb-2">{semester}</h5>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                                {Object.entries(subjects).map(([category, items]) => (
+                                  <div key={category}>
+                                    <h6 className="font-semibold text-foreground mb-3 font-sans text-lg">{category}</h6>
+                                    <ul className="space-y-3">
+                                      {items.map((item, idx) => (
+                                        <li key={idx} className="flex items-start gap-2 text-base font-medium text-muted-foreground font-sans">
+                                          <CheckCircle2 className="w-5 h-5 text-accent shrink-0 mt-0.5" />
+                                          <span>{item}</span>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="enroll"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <div className="flex items-center gap-2 mb-6">
+                          <BookOpen className="w-5 h-5 text-accent" />
+                          <h4 className="text-xl font-serif font-semibold text-foreground">Application Form</h4>
+                        </div>
+                        <div className="bg-card/50 rounded-xl">
+                          <EnrollmentForm
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            course={selectedCourse as any}
+                            onSubmit={handleSubmit}
+                            onCancel={() => setActiveTab("syllabus")}
+                            isOpen={true}
+                            isSubmitting={isSubmitting}
+                            progress={progress}
+                          />
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          </div>
         </div>
-
-        <motion.h3
-          className="text-3xl font-bold my-12 text-center text-[#F0C38E] drop-shadow-[0_0_10px_#F0C38E] sm:drop-shadow-[0_0_15px_#F0C38E]"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-        >
-          Diploma Course
-        </motion.h3>
-        <div className="flex justify-center">{renderDiplomaCourseCard()}</div>
       </div>
-
-      {/* Enrollment Form Modal */}
-      <AnimatePresence>
-        {selectedCourse && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center"
-            onClick={() => !isSubmitting && handleCancel()}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="bg-[#1a1a1c] p-6 rounded-lg shadow-2xl w-full max-w-md"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <EnrollmentForm
-                course={
-                  courses.find((c) => c.name === selectedCourse) ||
-                  diplomaCourse
-                }
-                onSubmit={handleSubmit}
-                onCancel={handleCancel}
-                isOpen={!!selectedCourse}
-                isSubmitting={isSubmitting}
-                progress={progress}
-              />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Syllabus Modal */}
-      <AnimatePresence>
-        {showSyllabus && (
-          <SyllabusModal
-            course={
-              courses.find((c) => c.name === showSyllabus) || diplomaCourse
-            }
-            onClose={() => setShowSyllabus(null)}
-          />
-        )}
-      </AnimatePresence>
-
-      {
-        //<div className="fixed bottom-10 inset-x-4 sm:inset-auto sm:right-4 sm:bottom-4 z-[9999]">
-        //  <Toaster />
-        //</div>
-      }
     </section>
   );
 };
+
 export default Courses;

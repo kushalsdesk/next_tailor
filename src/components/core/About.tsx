@@ -1,356 +1,197 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useMemo } from "react";
-import { motion } from "framer-motion";
-import { Briefcase, CheckCircle, Eye } from "lucide-react";
-import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Briefcase, CheckCircle, GraduationCap, Users, Clock, Target, Scissors, ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import CertificateModal from "@/components/modals/Certificate.modal";
-import GalleryModal from "@/components/modals/Gallery.modal";
+
+const testimonials = [
+  { quote: "The best tailoring institute! I started my own boutique within 6 months.", author: "Priya S." },
+  { quote: "Amazing instructors and completely hands-on learning.", author: "Anjali M." },
+  { quote: "Got my Govt certificate, totally worth it. The MSME guidance was a lifesaver.", author: "Neha K." },
+  { quote: "Flexible timings helped me learn while working a full-time job.", author: "Sneha R." },
+  { quote: "They taught me how to turn old clothes into designer pieces!", author: "Kiran T." },
+];
+
+const features = [
+  {
+    title: "Expert Instructors",
+    description: "Learn from Certified Industry Professionals with years of real-world experience.",
+    icon: <Users className="w-6 h-6 text-accent" />,
+    colSpan: "md:col-span-1",
+  },
+  {
+    title: "Hands-on Training",
+    description: "Get practical experience with state-of-the-art equipment.",
+    icon: <Scissors className="w-6 h-6 text-accent" />,
+    colSpan: "md:col-span-1",
+  },
+  {
+    title: "Industry Connections",
+    description: "Network with fashion houses and potential employers.",
+    icon: <Briefcase className="w-6 h-6 text-accent" />,
+    colSpan: "md:col-span-1",
+  },
+  {
+    title: "Flexible Schedule",
+    description: "Choose from day and evening classes with online and offline modes to fit your lifestyle.",
+    icon: <Clock className="w-6 h-6 text-accent" />,
+    colSpan: "md:col-span-2",
+  },
+  {
+    title: "Career Support",
+    description: "Receive guidance on job placements and entrepreneurship.",
+    icon: <Target className="w-6 h-6 text-accent" />,
+    colSpan: "md:col-span-1",
+  },
+  {
+    title: "Making Old into New",
+    description: "Dress Making is an enjoyable craft and a lucrative way to earn money. Make attractive handmade dresses & accessories with old clothes and make it a professional art.",
+    icon: <GraduationCap className="w-6 h-6 text-accent" />,
+    colSpan: "md:col-span-3",
+  },
+];
+
+const galleryImages = ["/sample.jpeg", "/images/image1.jpeg", "/images/image2.jpeg"];
 
 const About = () => {
-  const [showCertificate, setShowCertificate] = useState(false);
-  const [showGallery, setShowGallery] = useState(false);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [imageLoading, setImageLoading] = useState(true);
-  const [loaderTimer, setLoaderTimer] = useState<NodeJS.Timeout | null>(null);
-
   const sectionRef = useRef<HTMLElement>(null);
+  const [currentImg, setCurrentImg] = useState(0);
 
-  // Memoize gallery images
-  const galleryImages = useMemo(
-    () => ["/images/image1.jpeg", "/images/image2.jpeg"],
-    [],
-  );
-
-  // Memoize handlers to prevent unnecessary re-renders
-  const handleShowCertificate = useCallback(() => {
-    setShowCertificate(true);
-    setImageLoading(true);
-
-    // Ensure loader shows for at least 1.5 seconds
-    const timer = setTimeout(() => {
-      setLoaderTimer(null);
-    }, 1500);
-
-    setLoaderTimer(timer);
-  }, []);
-
-  const handleCloseCertificate = useCallback(() => {
-    setShowCertificate(false);
-    if (loaderTimer) {
-      clearTimeout(loaderTimer);
-      setLoaderTimer(null);
-    }
-  }, [loaderTimer]);
-
-  const handleShowGallery = useCallback(() => {
-    setShowGallery(true);
-    setImageLoading(true);
-
-    // Ensure loader shows for at least 1.5 seconds
-    const timer = setTimeout(() => {
-      setLoaderTimer(null);
-    }, 1500);
-
-    setLoaderTimer(timer);
-  }, []);
-
-  const handleCloseGallery = useCallback(() => {
-    setShowGallery(false);
-    if (loaderTimer) {
-      clearTimeout(loaderTimer);
-      setLoaderTimer(null);
-    }
-  }, [loaderTimer]);
-
-  const handleImageLoad = useCallback(() => {
-    // Only hide loader if minimum display time has passed
-    if (!loaderTimer) {
-      setImageLoading(false);
-    } else {
-      // Otherwise wait for the timer to complete
-      const checkTimer = setTimeout(() => {
-        setImageLoading(false);
-      }, 100);
-      return () => clearTimeout(checkTimer);
-    }
-  }, [loaderTimer]);
-
-  const handleChangeImage = useCallback((index: number) => {
-    setCurrentImageIndex(index);
-    setImageLoading(true);
-
-    // Ensure loader shows for at least 1.5 seconds
-    const timer = setTimeout(() => {
-      setLoaderTimer(null);
-    }, 1500);
-
-    setLoaderTimer(timer);
-  }, []);
-
-  const handlePrevImage = useCallback(() => {
-    const newIndex =
-      (currentImageIndex - 1 + galleryImages.length) % galleryImages.length;
-    handleChangeImage(newIndex);
-  }, [currentImageIndex, handleChangeImage, galleryImages.length]);
-
-  const handleNextImage = useCallback(() => {
-    const newIndex = (currentImageIndex + 1) % galleryImages.length;
-    handleChangeImage(newIndex);
-  }, [currentImageIndex, handleChangeImage, galleryImages.length]);
-
-  // Consolidated useEffect for section ID and scroll handling
-  useEffect(() => {
-    if (!sectionRef.current) return;
-
-    sectionRef.current.id = "about";
-
-    const handleHashChange = () => {
-      if (window.location.hash === "#about" && sectionRef.current) {
-        const headerHeight = 80;
-        const yOffset = -headerHeight;
-        const y =
-          sectionRef.current.getBoundingClientRect().top +
-          window.pageYOffset +
-          yOffset;
-        window.scrollTo({ top: y, behavior: "smooth" });
-      }
-    };
-
-    const handleAnchorClick = (e: MouseEvent) => {
-      e.preventDefault();
-
-      if (sectionRef.current) {
-        const headerHeight = 80;
-        const yOffset = -headerHeight;
-        const y =
-          sectionRef.current.getBoundingClientRect().top +
-          window.pageYOffset +
-          yOffset;
-        window.scrollTo({ top: y, behavior: "smooth" });
-        window.history.pushState(null, "", "#about");
-      }
-    };
-
-    // Add event listeners
-    window.addEventListener("hashchange", handleHashChange);
-
-    const anchors = document.querySelectorAll('a[href="#about"]');
-    anchors.forEach((anchor) => {
-      anchor.addEventListener("click", handleAnchorClick as EventListener);
-    });
-
-    // Initial scroll if needed
-    if (window.location.hash === "#about") {
-      setTimeout(handleHashChange, 100);
-    }
-
-    // Cleanup
-    return () => {
-      window.removeEventListener("hashchange", handleHashChange);
-      anchors.forEach((anchor) => {
-        anchor.removeEventListener("click", handleAnchorClick as EventListener);
-      });
-    };
-  }, []);
-
-  // Cleanup timer on unmount
-  useEffect(() => {
-    return () => {
-      if (loaderTimer) {
-        clearTimeout(loaderTimer);
-      }
-    };
-  }, [loaderTimer]);
-
-  // Memoize features array
-  const features = useMemo(
-    () => [
-      {
-        title: "Expert Instructors",
-        description:
-          "Learn from Certified Industry Professionals with years of Experience!",
-      },
-      {
-        title: "Hands-on Training",
-        description: "Get practical experience with state-of-the-art equipment",
-      },
-      {
-        title: "Industry Connections",
-        description: "Network with fashion houses and potential employers",
-      },
-      {
-        title: "Flexible Schedule",
-        description:
-          "Choose from day and evening classes with onlilne and offline mode to fit you lifestyle",
-      },
-      {
-        title: "Career Support",
-        description: "Receive guidance on job placements and entrepreneurship",
-      },
-      {
-        title: "Making Old into New One",
-        description:
-          "Dress Making is an enjoyable craft and it it also a lucrative way to earn money, Our Institute offers you to make attractive hand made dress & accessories with old cloths and make it a professional art.",
-      },
-    ],
-    [],
-  );
-
-  // Memoize feature cards to prevent unnecessary re-renders
-  const featureCards = useMemo(
-    () =>
-      features.map((item, index) => (
-        <motion.div
-          key={index}
-          className="flex flex-col backdrop-blur-sm bg-white/5 hover:bg-white/10 border border-white/20 hover:border-white/20 rounded-md text-white p-6 min-w-[250px] flex-grow md:w-[calc(33.333%-1.5rem)]"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.1, duration: 0.6 }}
-        >
-          <CardHeader>
-            <CardTitle className="flex items-center text-[#F0C38E]">
-              <CheckCircle className="w-6 h-6 mr-2" />
-              {item.title}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p>{item.description}</p>
-          </CardContent>
-        </motion.div>
-      )),
-    [features],
-  );
+  const nextImg = () => setCurrentImg((prev) => (prev + 1) % galleryImages.length);
+  const prevImg = () => setCurrentImg((prev) => (prev - 1 + galleryImages.length) % galleryImages.length);
 
   return (
-    <section ref={sectionRef} className="py-20 backdrop-blur-sm">
-      <div className="container mx-auto px-4 flex flex-col items-center">
-        <motion.h2
-          className="text-4xl font-bold mb-12 text-center text-[#F0C38E] drop-shadow-[0_0_10px_#F0C38E] sm:drop-shadow-[0_0_15px_#F0C38E]"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-        >
-          Why ASHAA? Best Tailoring Institute
-        </motion.h2>
+    <section id="about" ref={sectionRef} className="relative z-10 pt-24 bg-background flex flex-col">
+      <div className="container mx-auto px-4 max-w-7xl flex-grow mb-24">
+        
+        {/* Header - Removed problematic framer-motion whileInView to fix disappearing bug */}
+        <div className="text-center mb-16">
+          <h2 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-4">
+            Why ASHAA?
+          </h2>
+          <p className="text-muted-foreground font-sans text-lg">
+            The Premier Destination for Professional Tailoring Education
+          </p>
+        </div>
 
-        {/* Main Card */}
-        <motion.div
-          className="flex flex-col md:flex-row backdrop-blur-sm bg-white/5 border border-white/20 hover:border-white/30 rounded-md text-white w-full max-w-5xl md:p-6"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-        >
-          <div className="flex flex-col flex-1">
-            <CardHeader>
-              <CardTitle className="flex items-center text-[#F0C38E] text-2xl mb-4">
-                <CheckCircle className="w-8 h-8 mr-3" />
+        {/* First Card - Reimagined */}
+        <div className="bg-card border border-border rounded-[2rem] p-8 lg:p-12 mb-16 shadow-sm overflow-hidden relative">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Left Content */}
+            <div className="flex flex-col z-10">
+              <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full w-fit mb-6 font-semibold text-sm border border-primary/20">
+                <CheckCircle className="w-5 h-5" />
                 Government Certified Institute
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p
-                className="mb-4 font-semibold text-gray-400"
-                style={{ lineHeight: 2 }}
-              >
-                <b className="text-[#F0C38E]">ASHAA</b> is a{" "}
-                <b className="text-[#F0C38E]">
-                  Government-Certified Independent Training Center
-                </b>{" "}
-                dedicated to empowering individuals with hands on experience in{" "}
-                <b className="text-[#F0C38E]">
-                  garment design, stiching with top-level sewing machine{" "}
-                </b>
-                . We offer a diverse range of practical skill courses with
-                pattern making proper choice of fabric types at{" "}
-                <b className="text-[#F0C38E]">affordable fees</b>. Whether you
-                &apos; re looking to start a new career or enhance your existing
-                expertise, our institute provides the perfect opportunity to
-                turn your <b className="text-[#F0C38E]">passion for fashion</b>{" "}
-                into a <b className="text-[#F0C38E]">successful profession. </b>
-                Explore your creativity with unique sewing and design skills and
-                turn you hobby to profession by using old dress material.
+              </div>
+              
+              <h3 className="text-3xl lg:text-4xl font-serif font-bold text-foreground mb-6 leading-snug">
+                Turn your <span className="text-primary italic">passion for fashion</span> into a successful profession.
+              </h3>
+              
+              <p className="text-muted-foreground font-sans text-lg leading-relaxed mb-10">
+                <strong className="text-foreground">ASHAA</strong> is a Government-Certified Independent Training Center dedicated to empowering individuals with hands-on experience in garment design and stitching. We offer diverse practical courses with pattern making at highly affordable fees.
               </p>
-              <Button
-                onClick={handleShowGallery}
-                className="bg-[#F0C38E] text-black hover:bg-[#F0C38E]/80 mb-4"
-              >
-                <Eye className="w-4 h-4 mr-2" /> Checkout Gallery
-              </Button>
 
-              <Link
-                href={"#career"}
-                className="flex flex-row gap-4 items-center bg-[#F0C38E] hover:bg-[#F0C38E]/80 text-black font-sans text-md w-fit px-4 py-1.5 rounded-md"
-              >
-                <Briefcase className="w-4 h-4" /> Career Options
-              </Link>
-            </CardContent>
-          </div>
-          <div className="flex flex-col gap-5 justify-center items-center md:w-1/3 p-4">
-            <Link
-              href="/#about"
-              className="flex flex-col gap-4 items-center justify-center"
-            >
-              <Image
-                src="/aicvt.png"
-                alt="AICVT logo"
-                width={100}
-                height={100}
-              />
-              <p className="mb-4 font-semibold text-[#F0C38E] text-center">
-                <span className="font-sans text-gray-400">
-                  affiliated with{" "}
-                </span>
-                All India Council For Vocational Training
-              </p>
-            </Link>
-            <div className="h-32 bg-gray-300 w-full rounded-lg flex items-center justify-center">
-              <div className="relative w-full h-32 bg-gray-300 rounded-lg flex items-center justify-center">
-                <Button onClick={handleShowCertificate}>
-                  <Image
-                    src="/sample.jpeg"
-                    alt="sample certificate"
-                    fill
-                    style={{ objectFit: "contain" }}
-                    quality={100}
-                  />
-                </Button>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+                <Link
+                  href={"#career"}
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-8 py-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-md shadow-primary/20 w-full sm:w-auto"
+                >
+                  <Briefcase className="w-5 h-5" /> Career Options
+                </Link>
+                
+                <a href="https://aicvt.com" target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 sm:border-l-2 sm:border-border sm:pl-6 hover:opacity-80 transition-opacity">
+                  <Image src="/aicvt.png" alt="AICVT logo" width={56} height={56} className="object-contain" />
+                  <p className="text-sm font-semibold text-foreground max-w-[150px] leading-tight">
+                    Affiliated with All India Council For Vocational Training
+                  </p>
+                </a>
+              </div>
+            </div>
+
+            {/* Right Content - Inline Gallery & Certificate */}
+            <div className="flex flex-col gap-6 z-10">
+              {/* Changed bg-secondary to bg-background to avoid purple tint */}
+              <div className="bg-background rounded-[1.5rem] p-6 border border-border shadow-sm">
+                <div className="flex justify-between items-center mb-6">
+                  <h4 className="text-foreground font-serif font-bold text-xl">
+                    Campus & Certifications
+                  </h4>
+                  <div className="flex gap-2">
+                    <button onClick={prevImg} className="p-2 bg-background border border-border rounded-full shadow-sm hover:text-primary transition-colors"><ChevronLeft className="w-5 h-5"/></button>
+                    <button onClick={nextImg} className="p-2 bg-background border border-border rounded-full shadow-sm hover:text-primary transition-colors"><ChevronRight className="w-5 h-5"/></button>
+                  </div>
+                </div>
+                
+                <div className="relative aspect-[4/3] w-full rounded-xl overflow-hidden bg-white border border-border shadow-sm">
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={currentImg}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 1.05 }}
+                      transition={{ duration: 0.3 }}
+                      className="absolute inset-0"
+                    >
+                      <Image
+                        src={galleryImages[currentImg]}
+                        alt="Gallery"
+                        fill
+                        className="object-contain p-2"
+                      />
+                    </motion.div>
+                  </AnimatePresence>
+                </div>
+                <div className="flex justify-center gap-3 mt-6">
+                  {galleryImages.map((_, idx) => (
+                    <button 
+                      key={idx} 
+                      onClick={() => setCurrentImg(idx)}
+                      className={`h-2 rounded-full transition-all ${currentImg === idx ? 'bg-primary w-8' : 'bg-border hover:bg-primary/50 w-2'}`}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
 
-        {/* Feature Cards */}
-        <div className="flex flex-wrap justify-center gap-6 mt-8 max-w-5xl mx-auto">
-          {featureCards}
+        {/* Six Feature Cards - Bento Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {features.map((item, index) => (
+            <div
+              key={index}
+              className={`bg-card border border-border rounded-3xl p-8 hover:border-primary/50 transition-colors shadow-sm flex flex-col justify-center ${item.colSpan}`}
+            >
+              <div className="bg-primary/10 w-16 h-16 rounded-2xl flex items-center justify-center mb-6">
+                {item.icon}
+              </div>
+              <h4 className="text-2xl font-serif font-bold text-foreground mb-3">{item.title}</h4>
+              <p className="text-muted-foreground font-sans text-lg leading-relaxed">{item.description}</p>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* Certificate Modal */}
-      <CertificateModal
-        isOpen={showCertificate}
-        onClose={handleCloseCertificate}
-        imageLoading={imageLoading}
-        onImageLoad={handleImageLoad}
-      />
+      {/* Marquee Testimonials - Thin Purple Strip at the very bottom */}
+      <div className="w-full bg-primary py-3 overflow-hidden flex items-center shadow-inner mt-auto">
+        <motion.div
+          className="flex gap-8 whitespace-nowrap min-w-max px-4"
+          animate={{ x: ["0%", "-50%"] }}
+          transition={{ repeat: Infinity, ease: "linear", duration: 40 }}
+        >
+          {/* Duplicated array for seamless infinite scrolling */}
+          {[...testimonials, ...testimonials].map((t, i) => (
+            <span key={i} className="text-primary-foreground font-sans font-medium text-sm md:text-base flex items-center gap-8">
+              <span>&quot;{t.quote}&quot; — <span className="font-bold">{t.author}</span></span>
+              <span className="text-primary-foreground/40 font-light">|</span>
+            </span>
+          ))}
+        </motion.div>
+      </div>
 
-      {/* Gallery Modal */}
-      <GalleryModal
-        isOpen={showGallery}
-        onClose={handleCloseGallery}
-        imageLoading={imageLoading}
-        onImageLoad={handleImageLoad}
-        galleryImages={galleryImages}
-        currentImageIndex={currentImageIndex}
-        onChangeImage={handleChangeImage}
-        onPrevImage={handlePrevImage}
-        onNextImage={handleNextImage}
-      />
     </section>
   );
 };

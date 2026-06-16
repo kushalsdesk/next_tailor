@@ -1,24 +1,23 @@
 import type React from "react";
 import type { Metadata } from "next";
 import "./globals.css";
-import { Lora, Raleway } from "next/font/google";
+import { Playfair_Display, Inter } from "next/font/google";
 import Navbar from "@/components/core/Navbar";
 import Footer from "@/components/core/Footer";
-import Background from "@/components/svgs/Background.svgs";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/react";
 import { Suspense } from "react";
 
-const lora = Lora({
+const playfair = Playfair_Display({
   subsets: ["latin"],
   weight: ["400", "600", "700"],
-  variable: "--font-lora",
+  variable: "--font-playfair",
 });
 
-const raleway = Raleway({
+const inter = Inter({
   subsets: ["latin"],
-  weight: ["400", "500", "700"],
-  variable: "--font-raleway",
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-inter",
 });
 
 export const metadata: Metadata = {
@@ -58,13 +57,12 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${raleway.variable} ${lora.variable}`}>
+    <html lang="en" className={`${inter.variable} ${playfair.variable} font-sans`}>
       <head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </head>
       <body className="antialiased flex flex-col min-h-screen">
-        <Background />
         <Suspense fallback={<div>Loading...</div>}>
           <Navbar />
           {children}
