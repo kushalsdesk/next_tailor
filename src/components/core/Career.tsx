@@ -96,9 +96,9 @@ const Career = () => {
                  animate={{ opacity: 1, x: 0 }}
                  exit={{ opacity: 0, x: -20 }}
                  transition={{ duration: 0.3 }}
-                 className="bg-card border border-border rounded-2xl p-8 shadow-sm flex flex-col h-full"
+                 className="bg-card border border-border rounded-2xl p-4 sm:p-6 md:p-8 shadow-sm flex flex-col h-full"
                >
-                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 mb-8 border-b border-border pb-6">
+                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 mb-6 sm:mb-8 border-b border-border pb-4 sm:pb-6">
                     <div className="relative w-20 h-20 bg-white rounded-2xl overflow-hidden p-3 shadow-sm border border-border shrink-0">
                        <Image src={selectedCareer.icon} alt={selectedCareer.title} fill style={{ objectFit: "contain" }} />
                     </div>

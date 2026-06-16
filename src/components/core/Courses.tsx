@@ -3,10 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import EnrollmentForm, { EnrollmentFormValues } from "@/components/modals/EnrollmentForm.modal";
+import EnrollmentForm from "@/components/modals/EnrollmentForm.modal";
 import { courses, diplomaCourse } from "@/lib/CourseData";
-import { Progress } from "@/components/ui/progress";
-import { toast } from "sonner";
 import { ChevronRight, CheckCircle2, Clock, IndianRupee, BookOpen, ScrollText } from "lucide-react";
 
 const allCourses = [...courses, diplomaCourse];
@@ -14,8 +12,6 @@ const allCourses = [...courses, diplomaCourse];
 const Courses = () => {
   const [selectedCourse, setSelectedCourse] = useState(allCourses[0]);
   const [activeTab, setActiveTab] = useState<"syllabus" | "enroll">("syllabus");
-  const [progress, setProgress] = useState(0);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const sectionRef = useRef<HTMLElement>(null);
 
@@ -45,42 +41,8 @@ const Courses = () => {
     return () => window.removeEventListener("hashchange", handleHashChange);
   }, []);
 
-  const handleSubmit = async (data: EnrollmentFormValues) => {
-    setIsSubmitting(true);
-    try {
-      const interval = setInterval(() => {
-        setProgress((prev) => (prev >= 100 ? 100 : prev + 10));
-      }, 500);
-
-      const response = await fetch("/api/enroll", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-
-      clearInterval(interval);
-      if (!response.ok) throw new Error("Failed to submit enrollment");
-      setProgress(100);
-      
-      setActiveTab("syllabus");
-      toast.success("Enrollment Successful!", {
-        description: `You have successfully enrolled for ${selectedCourse.name}. We will connect shortly.`,
-      });
-    } catch {
-      setProgress(0);
-      toast.error("Failed to submit enrollment. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-      setProgress(0);
-    }
-  };
-
   return (
     <section ref={sectionRef} className="py-24 bg-background relative border-y border-border">
-      {isSubmitting && (
-        <Progress value={progress} className="w-full h-1 fixed top-0 left-0 z-50 rounded-none" />
-      )}
-
       <div className="container mx-auto px-4 max-w-7xl">
         <motion.div
           className="text-center mb-16"
@@ -124,7 +86,7 @@ const Courses = () => {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.3 }}
-                className="bg-card border border-border rounded-2xl p-8 shadow-sm flex flex-col h-full min-h-[500px]"
+                className="bg-card border border-border rounded-2xl p-4 sm:p-6 md:p-8 shadow-sm flex flex-col h-full min-h-[500px]"
               >
                 <div className="mb-8 border-b border-border pb-6 flex flex-col md:flex-row md:items-start justify-between gap-6">
                   <div>
@@ -234,11 +196,6 @@ const Courses = () => {
                           <EnrollmentForm
                             // eslint-disable-next-line @typescript-eslint/no-explicit-any
                             course={selectedCourse as any}
-                            onSubmit={handleSubmit}
-                            onCancel={() => setActiveTab("syllabus")}
-                            isOpen={true}
-                            isSubmitting={isSubmitting}
-                            progress={progress}
                           />
                         </div>
                       </motion.div>

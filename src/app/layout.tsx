@@ -4,6 +4,7 @@ import "./globals.css";
 import { Playfair_Display, Inter } from "next/font/google";
 import Navbar from "@/components/core/Navbar";
 import Footer from "@/components/core/Footer";
+import AuthProvider from "@/components/providers/AuthProvider";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/react";
 import { Suspense } from "react";
@@ -63,13 +64,15 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </head>
       <body className="antialiased flex flex-col min-h-screen">
-        <Suspense fallback={<div>Loading...</div>}>
-          <Navbar />
-          {children}
-          <SpeedInsights />
-          <Analytics />
-          <Footer />
-        </Suspense>
+        <AuthProvider>
+          <Suspense fallback={<div>Loading...</div>}>
+            <Navbar />
+            {children}
+            <SpeedInsights />
+            <Analytics />
+            <Footer />
+          </Suspense>
+        </AuthProvider>
       </body>
     </html>
   );
