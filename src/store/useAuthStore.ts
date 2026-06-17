@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { auth, googleProvider } from '@/lib/firebase';
-import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
+import { onAuthStateChanged, signInWithPopup, signOut, signInWithEmailAndPassword } from 'firebase/auth';
 
 export interface UserProfile {
   uid: string;
@@ -22,6 +22,7 @@ interface AuthState {
   // Real Firebase Actions
   initializeAuthListener: () => () => void; // Returns unsubscribe function
   signInWithGoogle: () => Promise<void>;
+  signInWithEmail: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -44,21 +45,29 @@ export const useAuthStore = create<AuthState>((set) => ({
     // Listen for Firebase Auth state changes globally
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       if (firebaseUser) {
-        // Here we could also fetch a user document from Firestore to get their role
-        // For now, everyone is a 'user' unless their email matches an admin email
-        const role = firebaseUser.email === "ashaafoundation25@gmail.com" ? "admin" : "user";
+        // Assign 'admin' role if the email matches the predefined admin address
+        const role = firebaseUser.email === "admin@ashaafoundation.com" ? "admin" : "user";
         
+        const userProfile: UserProfile = {
+          uid: firebaseUser.uid,
+          email: firebaseUser.email,
+          displayName: firebaseUser.displayName,
+          photoURL: firebaseUser.photoURL,
+          role,
+        };
+
         set({
-          user: {
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            displayName: firebaseUser.displayName,
-            photoURL: firebaseUser.photoURL,
-            role,
-          },
+          user: userProfile,
           isAuthenticated: true,
           isAuthLoading: false,
         });
+
+        // Sync to MongoDB via API Route
+        fetch("/api/users", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(userProfile),
+        }).catch(err => console.error("Failed to sync user to DB", err));
       } else {
         set({ user: null, isAuthenticated: false, isAuthLoading: false });
       }
@@ -73,6 +82,17 @@ export const useAuthStore = create<AuthState>((set) => ({
       // The onAuthStateChanged listener will handle the UI update automatically
     } catch (error) {
       console.error("Google Sign-In Error:", error);
+      set({ isAuthLoading: false });
+      throw error;
+    }
+  },
+
+  signInWithEmail: async (email, password) => {
+    try {
+      set({ isAuthLoading: true });
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (error) {
+      console.error("Email Sign-In Error:", error);
       set({ isAuthLoading: false });
       throw error;
     }

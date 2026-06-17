@@ -1,0 +1,235 @@
+"use client";
+
+import { useState } from "react";
+import { useAuthStore } from "@/store/useAuthStore";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import { Lock, ShieldCheck, LogOut, LayoutDashboard, MessageSquare, BookOpen, Image as ImageIcon, Users } from "lucide-react";
+import { useRouter } from "next/navigation";
+import AdminChatbox from "@/components/admin/AdminChatbox";
+
+export default function AdminPage() {
+  const { user, isAuthLoading, signInWithEmail, logout } = useAuthStore();
+  const [password, setPassword] = useState("");
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [activeTab, setActiveTab] = useState<"overview" | "messages" | "courses" | "gallery" | "users">("overview");
+  const router = useRouter();
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!password) {
+      toast.error("Password is required.");
+      return;
+    }
+
+    setIsLoggingIn(true);
+    try {
+      await signInWithEmail("admin@ashaafoundation.com", password);
+      toast.success("Welcome back, Admin!");
+    } catch (error) {
+      toast.error("Invalid credentials.");
+      console.error(error);
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  // If user is authenticated but NOT an admin
+  if (user && user.role !== "admin") {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center bg-background">
+        <div className="w-20 h-20 bg-destructive/10 rounded-full flex items-center justify-center mb-6">
+          <Lock className="w-10 h-10 text-destructive" />
+        </div>
+        <h1 className="text-3xl font-serif font-bold mb-4">Access Denied</h1>
+        <p className="text-muted-foreground max-w-md mb-8">
+          You are currently signed in as <strong>{user.email}</strong>, which does not have administrative privileges.
+        </p>
+        <div className="flex gap-4">
+          <Button onClick={() => router.push("/")} variant="outline">Return Home</Button>
+          <Button onClick={logout} variant="destructive">Sign Out</Button>
+        </div>
+      </div>
+    );
+  }
+
+  // If user is NOT authenticated at all, show the login form
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-secondary/20">
+        <div className="bg-card border border-border rounded-2xl p-8 max-w-md w-full shadow-lg relative overflow-hidden">
+          <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/10 rounded-full blur-2xl"></div>
+          
+          <div className="relative z-10">
+            <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-6 border border-primary/20">
+              <ShieldCheck className="w-8 h-8 text-primary" />
+            </div>
+            
+            <h1 className="text-2xl font-serif font-bold text-foreground mb-2">Admin Portal</h1>
+            <p className="text-muted-foreground text-sm mb-8">
+              Secure access for ASHAA Foundation administrators only.
+            </p>
+
+            <form onSubmit={handleLogin} className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-foreground font-semibold">Admin Email</Label>
+                <Input 
+                  id="email" 
+                  type="email" 
+                  value="admin@ashaafoundation.com" 
+                  disabled 
+                  className="bg-secondary/50 border-border text-muted-foreground cursor-not-allowed font-medium"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-foreground font-semibold">Password</Label>
+                <Input 
+                  id="password" 
+                  type="password" 
+                  placeholder="Enter admin password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="bg-background border-border text-foreground focus:border-primary focus:ring-primary"
+                  autoFocus
+                />
+              </div>
+
+              <Button 
+                type="submit" 
+                disabled={isLoggingIn || !password}
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-6 rounded-xl mt-4 shadow-md transition-all"
+              >
+                {isLoggingIn ? "Verifying..." : "Secure Login"}
+              </Button>
+            </form>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const tabs = [
+    { id: "overview", label: "Dashboard", icon: <LayoutDashboard className="w-4 h-4" /> },
+    { id: "messages", label: "User Inquiries", icon: <MessageSquare className="w-4 h-4" /> },
+    { id: "courses", label: "Manage Courses", icon: <BookOpen className="w-4 h-4" /> },
+    { id: "gallery", label: "Manage Gallery", icon: <ImageIcon className="w-4 h-4" /> },
+    { id: "users", label: "Registered Users", icon: <Users className="w-4 h-4" /> },
+  ] as const;
+
+  // If authenticated AND is admin -> Show Dashboard
+  return (
+    <div className="min-h-screen bg-secondary/10 flex flex-col md:flex-row">
+      
+      {/* Sidebar Navigation */}
+      <aside className="w-full md:w-64 bg-card border-r border-border flex flex-col shrink-0">
+        <div className="p-6 border-b border-border">
+          <div className="flex items-center gap-3 text-primary font-bold font-serif text-xl">
+            <ShieldCheck className="w-6 h-6" />
+            Admin Panel
+          </div>
+        </div>
+        
+        <div className="flex-1 overflow-y-auto p-4 space-y-2 flex md:flex-col gap-2 md:gap-0 overflow-x-auto md:overflow-x-visible">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as "overview" | "messages" | "courses" | "gallery" | "users")}
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors font-medium text-sm whitespace-nowrap ${
+                activeTab === tab.id 
+                  ? "bg-primary text-primary-foreground shadow-sm" 
+                  : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+              }`}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="p-4 border-t border-border mt-auto">
+          <Button onClick={logout} variant="outline" className="w-full text-destructive hover:bg-destructive/10 hover:text-destructive border-destructive/20 justify-start">
+            <LogOut className="w-4 h-4 mr-2" /> Sign Out
+          </Button>
+        </div>
+      </aside>
+
+      {/* Main Content Area */}
+      <main className="flex-1 flex flex-col overflow-hidden h-screen">
+        <header className="bg-card border-b border-border p-6 flex justify-between items-center shrink-0">
+          <div>
+            <h1 className="text-2xl font-serif font-bold text-foreground capitalize">
+              {tabs.find(t => t.id === activeTab)?.label}
+            </h1>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold text-sm">
+              A
+            </div>
+            <span className="text-sm font-semibold hidden sm:block">Admin</span>
+          </div>
+        </header>
+
+        <div className="flex-1 overflow-y-auto p-6 md:p-8">
+          
+          {/* Tab Rendering */}
+          {activeTab === "overview" && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
+                <h3 className="text-muted-foreground text-sm font-semibold mb-2">Pending Applications</h3>
+                <p className="text-3xl font-bold">0</p>
+              </div>
+              <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
+                <h3 className="text-muted-foreground text-sm font-semibold mb-2">Unread Queries</h3>
+                <p className="text-3xl font-bold">0</p>
+              </div>
+              <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
+                <h3 className="text-muted-foreground text-sm font-semibold mb-2">Total Users</h3>
+                <p className="text-3xl font-bold">0</p>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "messages" && (
+            <AdminChatbox />
+          )}
+
+          {activeTab === "courses" && (
+            <div className="bg-card border border-border rounded-2xl p-12 text-center text-muted-foreground shadow-sm">
+              <BookOpen className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <h2 className="text-xl font-bold text-foreground mb-2">Manage Courses</h2>
+              <p>Firestore integration pending for editing duration and fees.</p>
+            </div>
+          )}
+
+          {activeTab === "gallery" && (
+            <div className="bg-card border border-border rounded-2xl p-12 text-center text-muted-foreground shadow-sm">
+              <ImageIcon className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <h2 className="text-xl font-bold text-foreground mb-2">Manage Gallery</h2>
+              <p>Firestore Storage integration pending for image uploads.</p>
+            </div>
+          )}
+
+          {activeTab === "users" && (
+            <div className="bg-card border border-border rounded-2xl p-12 text-center text-muted-foreground shadow-sm">
+              <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <h2 className="text-xl font-bold text-foreground mb-2">Registered Users</h2>
+              <p>Firestore integration pending for viewing Google signed-in users.</p>
+            </div>
+          )}
+
+        </div>
+      </main>
+    </div>
+  );
+}

@@ -5,6 +5,7 @@ import { Toaster } from "sonner";
 import HeroSection from "@/components/core/HeroSection";
 import About from "@/components/core/About";
 import Courses from "@/components/core/Courses";
+import Application from "@/components/core/Application";
 import Tools from "@/components/core/Tools";
 import Career from "@/components/core/Career";
 
@@ -33,6 +34,7 @@ const Page = () => {
       <HeroSection />
       <About />
       <Courses />
+      <Application />
       <Tools />
       <Career />
       <Toaster position={position} richColors />

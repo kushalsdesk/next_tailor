@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import ContactForm from "@/components/modals/ContactForm.modal";
 import EnhancedParagraph from "@/components/modals/CareerPara.modal";
-import { ChevronRight } from "lucide-react";
+import { ChevronDown, CheckCircle2 } from "lucide-react";
 
 const opportunities = [
   { title: "Open your own boutique", icon: "/own_boutique.png" },
@@ -19,6 +19,7 @@ const opportunities = [
 const Career = () => {
   const sectionRef = useRef<HTMLElement>(null);
   const [selectedCareer, setSelectedCareer] = useState(opportunities[0]);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   useEffect(() => {
     if (sectionRef.current) {
@@ -57,63 +58,77 @@ const Career = () => {
         {/* Business Facilities (Hardcoded Cards for SEO) */}
         <EnhancedParagraph />
 
-        {/* Career Opportunities Master-Detail Split Layout */}
-        <div className="text-left mt-24 mb-10">
-           <h3 className="text-4xl font-serif font-bold text-foreground mb-4">Connect With Us</h3>
-           <p className="text-muted-foreground font-sans text-lg">Select a career path below to get personalized guidance and start your journey.</p>
-        </div>
-
-        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 lg:items-start text-left">
-          {/* Left Column: Opportunities List */}
-          <div className="w-full lg:w-1/3 flex flex-col gap-3 lg:sticky lg:top-24">
-            {opportunities.map((opportunity, index) => (
-              <button
-                key={index}
-                onClick={() => setSelectedCareer(opportunity)}
-                className={`w-full text-left px-6 py-5 rounded-xl transition-all duration-300 border flex items-center justify-between group ${
-                  selectedCareer.title === opportunity.title
-                    ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20"
-                    : "bg-card text-card-foreground border-border hover:border-primary/50 hover:bg-secondary"
-                }`}
-              >
-                <div className="flex items-center gap-4">
-                   <div className="relative w-12 h-12 bg-white rounded-full overflow-hidden p-2 shrink-0 border border-border">
-                     <Image src={opportunity.icon} alt={opportunity.title} fill style={{ objectFit: "contain" }} />
-                   </div>
-                   <span className="font-semibold font-serif text-xl leading-snug">{opportunity.title}</span>
-                </div>
-                <ChevronRight className={`w-5 h-5 shrink-0 transition-transform ${selectedCareer.title === opportunity.title ? "opacity-100" : "opacity-0 group-hover:opacity-50"}`} />
-              </button>
-            ))}
+        <div className="mt-24 max-w-4xl mx-auto">
+          <div className="text-center mb-12">
+             <h3 className="text-4xl font-serif font-bold text-foreground mb-4">Connect With Us</h3>
+             <p className="text-muted-foreground font-sans text-lg">
+               Select a career path below to get personalized guidance and start your journey.
+             </p>
           </div>
 
-          {/* Right Column: Contact Form pre-filled */}
-          <div className="w-full lg:w-2/3">
-             <AnimatePresence mode="wait">
-               <motion.div
-                 key={selectedCareer.title}
-                 initial={{ opacity: 0, x: 20 }}
-                 animate={{ opacity: 1, x: 0 }}
-                 exit={{ opacity: 0, x: -20 }}
-                 transition={{ duration: 0.3 }}
-                 className="bg-card border border-border rounded-2xl p-4 sm:p-6 md:p-8 shadow-sm flex flex-col h-full"
-               >
-                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 mb-6 sm:mb-8 border-b border-border pb-4 sm:pb-6">
-                    <div className="relative w-20 h-20 bg-white rounded-2xl overflow-hidden p-3 shadow-sm border border-border shrink-0">
-                       <Image src={selectedCareer.icon} alt={selectedCareer.title} fill style={{ objectFit: "contain" }} />
-                    </div>
-                    <div>
-                       <h3 className="text-3xl font-serif font-bold text-foreground mb-2">
-                         {selectedCareer.title}
-                       </h3>
-                       <p className="text-muted-foreground font-sans text-base">Fill out the form below to connect with our experts regarding this path.</p>
-                    </div>
-                 </div>
+          <div className="bg-card border border-border rounded-2xl p-6 md:p-10 shadow-xl flex flex-col gap-8 relative overflow-hidden text-left">
+            {/* Decorator blob */}
+            <div className="absolute -top-24 -right-24 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none"></div>
 
-                 {/* Contact Form automatically pre-filled via props */}
-                 <ContactForm selectedCareer={selectedCareer.title} />
-               </motion.div>
-             </AnimatePresence>
+            {/* Custom Dropdown Selection */}
+            <div className="relative z-40">
+              <label className="block text-sm font-semibold text-muted-foreground mb-3 tracking-wide uppercase">Select a Career Path</label>
+              <div className="relative">
+                <button
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className={`w-full bg-background text-foreground border-2 border-border hover:border-primary/50 rounded-xl p-4 font-serif text-xl font-bold flex items-center justify-between transition-all shadow-sm ${isDropdownOpen ? "border-primary" : ""}`}
+                >
+                  <div className="flex items-center gap-4 truncate">
+                    <div className="relative w-8 h-8 rounded-full overflow-hidden shrink-0 border border-border bg-white">
+                      <Image src={selectedCareer.icon} alt={selectedCareer.title} fill style={{ objectFit: "contain" }} />
+                    </div>
+                    <span className="truncate">{selectedCareer.title}</span>
+                  </div>
+                  <ChevronDown className={`w-6 h-6 text-muted-foreground transition-transform duration-300 shrink-0 ${isDropdownOpen ? "rotate-180" : ""}`} />
+                </button>
+
+                <AnimatePresence>
+                  {isDropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute top-full left-0 right-0 mt-2 bg-card border border-border shadow-2xl rounded-xl z-50 overflow-hidden"
+                    >
+                      <div className="max-h-[40vh] overflow-y-auto p-2">
+                        {opportunities.map((opportunity) => (
+                          <button
+                            key={opportunity.title}
+                            onClick={() => {
+                              setSelectedCareer(opportunity);
+                              setIsDropdownOpen(false);
+                            }}
+                            className={`w-full text-left p-4 hover:bg-secondary rounded-lg transition-colors border-b border-border/50 last:border-0 flex items-center justify-between group ${
+                              selectedCareer.title === opportunity.title ? "bg-primary/5 text-primary" : "text-foreground"
+                            }`}
+                          >
+                            <div className="flex items-center gap-4">
+                              <div className="relative w-8 h-8 rounded-full overflow-hidden shrink-0 border border-border bg-white group-hover:border-primary transition-colors">
+                                <Image src={opportunity.icon} alt={opportunity.title} fill style={{ objectFit: "contain" }} />
+                              </div>
+                              <span className="font-semibold text-base font-serif group-hover:text-primary transition-colors">{opportunity.title}</span>
+                            </div>
+                            {selectedCareer.title === opportunity.title && <CheckCircle2 className="w-5 h-5 text-primary shrink-0" />}
+                          </button>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+
+            {/* Form Component */}
+            <div className="border-t border-border pt-8 relative z-10">
+              <ContactForm selectedCareer={selectedCareer.title} />
+            </div>
+
           </div>
         </div>
       </div>

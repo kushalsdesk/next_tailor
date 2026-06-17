@@ -78,8 +78,8 @@ const About = () => {
           </p>
         </div>
 
-        {/* First Card - Reimagined */}
-        <div className="bg-card border border-border rounded-[2rem] p-8 lg:p-12 mb-16 shadow-sm overflow-hidden relative">
+        {/* First Section - No longer a card */}
+        <div className="mb-16 lg:mb-24 relative">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left Content */}
             <div className="flex flex-col z-10">

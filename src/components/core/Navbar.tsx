@@ -3,10 +3,13 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, Menu, X, Phone, Mail, Clock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUIStore } from "@/store/useUIStore";
+import { useAuthStore } from "@/store/useAuthStore";
+import GlobalChatbox from "@/components/core/GlobalChatbox";
 
 type NavItem = {
   title: string;
@@ -39,6 +42,8 @@ const Navbar = () => {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [activeMobileSection, setActiveMobileSection] = useState<string | null>(null);
   const [showLogo, setShowLogo] = useState(true);
+  const pathname = usePathname();
+  const { user, isAuthenticated, signInWithGoogle, logout } = useAuthStore();
 
   const isMobileMenuOpen = useUIStore((state) => state.isMobileMenuOpen);
   const setMobileMenuOpen = useUIStore((state) => state.setMobileMenuOpen);
@@ -81,6 +86,8 @@ const Navbar = () => {
       window.scrollTo({ top: offsetPosition, behavior: "smooth" });
     }
   };
+
+  if (pathname.startsWith("/admin")) return null;
 
   return (
     <>
@@ -190,11 +197,40 @@ const Navbar = () => {
                 </AnimatePresence>
               </div>
 
-              <div className="flex items-center pl-4 border-l border-border">
+              <div className="flex items-center pl-4 border-l border-border gap-4">
                 <Button className="font-semibold gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-md rounded-full px-6">
                   <Phone className="w-4 h-4" />
                   +91 9147714547
                 </Button>
+                
+                {isAuthenticated ? (
+                  <div className="relative group">
+                    <button className="flex items-center gap-2 hover:bg-secondary rounded-full p-1 pr-3 transition-colors border border-transparent hover:border-border">
+                      <div className="w-8 h-8 rounded-full overflow-hidden border border-border shrink-0">
+                        <Image src={user?.photoURL || "/placeholder.svg"} alt="User" width={32} height={32} className="object-cover w-full h-full" />
+                      </div>
+                      <span className="text-sm font-bold truncate max-w-[100px]">{user?.displayName?.split(" ")[0]}</span>
+                      <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                    </button>
+                    
+                    {/* Hover Dropdown */}
+                    <div className="absolute top-full right-0 mt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                      <div className="bg-card border border-border shadow-xl rounded-xl w-48 overflow-hidden p-1">
+                        <div className="p-3 border-b border-border mb-1">
+                          <p className="text-sm font-bold truncate">{user?.displayName}</p>
+                          <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                        </div>
+                        <button onClick={logout} className="w-full text-left px-3 py-2 text-sm text-destructive hover:bg-destructive/10 rounded-lg transition-colors font-semibold">
+                          Sign out
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <Button onClick={() => signInWithGoogle()} variant="outline" className="font-semibold shadow-sm rounded-full px-6 border-border hover:bg-secondary">
+                    Sign In
+                  </Button>
+                )}
               </div>
             </nav>
 
@@ -294,6 +330,29 @@ const Navbar = () => {
                   ashaafoundation25@gmail.com
                 </Button>
               </div>
+
+              {isAuthenticated ? (
+                <div className="border-t border-border pt-4 pb-2 mt-2">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 rounded-full overflow-hidden border border-border">
+                      <Image src={user?.photoURL || "/placeholder.svg"} alt="User" width={48} height={48} className="object-cover w-full h-full" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-foreground">{user?.displayName}</p>
+                      <p className="text-sm text-muted-foreground">{user?.email}</p>
+                    </div>
+                  </div>
+                  <Button onClick={logout} variant="destructive" className="w-full justify-start py-6 text-md font-semibold rounded-xl">
+                    Sign Out
+                  </Button>
+                </div>
+              ) : (
+                <div className="border-t border-border pt-4 pb-2 mt-2">
+                  <Button onClick={() => { signInWithGoogle(); toggleMobileMenu(); }} variant="outline" className="w-full justify-center py-6 text-md font-semibold bg-white text-black border-gray-200 hover:bg-gray-50 rounded-xl gap-3 shadow-sm">
+                    Sign in with Google
+                  </Button>
+                </div>
+              )}
             </div>
           </motion.div>
         )}
@@ -301,6 +360,10 @@ const Navbar = () => {
 
       {/* Optional: Add a spacer to prevent content from hiding behind the fixed navbar */}
       <div className="h-20 w-full" aria-hidden="true" />
+
+      <div className={isMobileMenuOpen ? "hidden" : ""}>
+        <GlobalChatbox />
+      </div>
     </>
   );
 };

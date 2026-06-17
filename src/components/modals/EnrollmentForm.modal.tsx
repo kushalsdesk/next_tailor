@@ -1,12 +1,11 @@
 "use client";
 import type React from "react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Form,
   FormControl,
@@ -16,8 +15,7 @@ import {
 } from "@/components/ui/form";
 import { toast } from "sonner";
 import { useAuthStore } from "@/store/useAuthStore";
-import { MessageCircle, LogOut, Phone, Send, Info, MapPin } from "lucide-react";
-import Image from "next/image";
+import { Phone, MapPin, Info } from "lucide-react";
 import type { Course } from "@/lib/CourseData";
 
 const GoogleIcon = () => (
@@ -32,32 +30,22 @@ const GoogleIcon = () => (
 );
 
 const enrollmentSchema = z.object({
-  phone: z.string().optional(),
-  zipcode: z.string().optional(),
+  phone: z.string().min(10, "10-digit phone required"),
+  zipcode: z.string().min(5, "Valid zip required"),
   course: z.string().min(1, "Course name is required"),
-  message: z.string().optional(),
 });
 
 export type EnrollmentFormValues = z.infer<typeof enrollmentSchema>;
 
 interface EnrollmentFormProps {
   course: Course | typeof import("@/lib/CourseData").diplomaCourse;
-  onSubmit?: (data: EnrollmentFormValues) => void;
-  onCancel?: () => void;
-  isOpen?: boolean;
-  isSubmitting?: boolean;
-  progress?: number;
 }
 
-const EnrollmentForm: React.FC<EnrollmentFormProps> = ({
-  course,
-}) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+const EnrollmentForm: React.FC<EnrollmentFormProps> = ({ course }) => {
   const [isApplying, setIsApplying] = useState(false);
-  const [mockMessages, setMockMessages] = useState<{id: number, text: string, sender: 'user' | 'admin'}[]>([]);
 
   // Zustand Global State
-  const { user, isAuthenticated, signInWithGoogle, logout } = useAuthStore();
+  const { isAuthenticated, signInWithGoogle } = useAuthStore();
 
   const form = useForm<z.infer<typeof enrollmentSchema>>({
     resolver: zodResolver(enrollmentSchema),
@@ -65,13 +53,8 @@ const EnrollmentForm: React.FC<EnrollmentFormProps> = ({
       phone: "",
       zipcode: "",
       course: course.name,
-      message: "",
     }
   });
-
-  useEffect(() => {
-    form.setValue("course", course.name);
-  }, [course.name, form]);
 
   const handleGoogleSignIn = async () => {
     try {
@@ -81,44 +64,11 @@ const EnrollmentForm: React.FC<EnrollmentFormProps> = ({
     }
   };
 
-  const handleApplyNow = async () => {
-    const phone = form.getValues("phone");
-    const zipcode = form.getValues("zipcode");
-    const courseVal = form.getValues("course");
-    
-    let hasError = false;
-    if (!phone || phone.length < 10) {
-      form.setError("phone", { type: "manual", message: "10-digit phone required to apply" });
-      hasError = true;
-    } else {
-      form.clearErrors("phone");
-    }
-
-    if (!zipcode || zipcode.length < 5) {
-      form.setError("zipcode", { type: "manual", message: "Valid zip required to apply" });
-      hasError = true;
-    } else {
-      form.clearErrors("zipcode");
-    }
-
-    if (hasError) return;
-
+  const handleApplyNow = async (values: z.infer<typeof enrollmentSchema>) => {
     setIsApplying(true);
     try {
-      const payload = {
-        queryType: "application",
-        course: courseVal,
-        phone,
-        zipcode,
-        name: user?.displayName,
-        email: user?.email,
-      };
-      console.log("Applying for admission:", payload);
-      await new Promise((resolve) => setTimeout(resolve, 600));
-      toast.success("Admission Application Submitted Successfully!");
-      
-      // Auto-message to reflect action
-      setMockMessages(prev => [...prev, { id: Date.now(), text: `I have submitted my application for ${courseVal}.`, sender: 'user' }]);
+      // In future, save this to MongoDB applications collection
+      toast.success(`Application for ${course.name} submitted successfully!`);
     } catch (err) {
       toast.error("Failed to submit application.");
       console.error(err);
@@ -127,45 +77,16 @@ const EnrollmentForm: React.FC<EnrollmentFormProps> = ({
     }
   };
 
-  const handleSendMessage = async () => {
-    const message = form.getValues("message");
-    if (!message || message.trim() === "") return;
-
-    setIsSubmitting(true);
-    
-    const newMsg = { id: Date.now(), text: message, sender: 'user' as const };
-    setMockMessages(prev => [...prev, newMsg]);
-
-    try {
-      const payload = {
-        queryType: "admission_query",
-        ...form.getValues(),
-        name: user?.displayName,
-        email: user?.email,
-      };
-
-      console.log("Mock query submission:", payload);
-      await new Promise((resolve) => setTimeout(resolve, 600));
-
-      form.setValue("message", ""); 
-    } catch (err) {
-      toast.error("Failed to send message. Please try again.");
-      console.error(err);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   // --- UI STATE 1: NOT AUTHENTICATED ---
   if (!isAuthenticated) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 px-6 text-center bg-card/50 border border-border border-dashed rounded-2xl h-full min-h-[400px]">
+      <div className="flex flex-col items-center justify-center py-16 px-6 text-center bg-card/50 rounded-2xl h-full w-full">
         <div className="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mb-6 shadow-sm border border-border">
-          <MessageCircle className="w-10 h-10 text-primary" />
+          <Info className="w-10 h-10 text-primary" />
         </div>
         <h4 className="text-2xl font-serif font-bold text-foreground mb-3">Sign in to Apply</h4>
         <p className="text-muted-foreground mb-8 max-w-sm font-sans text-base">
-          Sign in with your Google account to chat with our admission officers regarding <strong className="text-foreground">{course.name}</strong>.
+          Sign in with your Google account to submit an application for <strong className="text-foreground">{course.name}</strong>.
         </p>
         <Button 
           onClick={handleGoogleSignIn} 
@@ -178,46 +99,15 @@ const EnrollmentForm: React.FC<EnrollmentFormProps> = ({
     );
   }
 
-  // --- UI STATE 2: AUTHENTICATED CHAT INTERFACE ---
+  // --- UI STATE 2: AUTHENTICATED FORM ---
   return (
-    <div className="flex flex-col h-full space-y-6 w-full">
-      
-      {/* 1. Mobile-Optimized Profile Header */}
-      <div className="flex flex-col sm:flex-row items-center justify-between p-4 bg-secondary/50 rounded-xl border border-border gap-4">
-        <div className="flex items-center gap-4 w-full sm:w-auto">
-          <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-background shadow-sm shrink-0">
-            <Image 
-              src={user?.photoURL || "/placeholder.svg"} 
-              alt="Profile" 
-              fill 
-              className="object-cover"
-            />
-          </div>
-          <div className="text-left flex-1 min-w-0">
-            <p className="font-bold font-sans text-foreground leading-tight truncate">{user?.displayName}</p>
-            <p className="text-sm font-sans text-muted-foreground truncate">{user?.email}</p>
-          </div>
-        </div>
-        <Button 
-          type="button" 
-          variant="outline" 
-          size="sm" 
-          onClick={logout} 
-          className="w-full sm:w-auto text-muted-foreground hover:bg-destructive hover:text-destructive-foreground hover:border-destructive transition-colors shrink-0"
-        >
-          <LogOut className="w-4 h-4 mr-2" />
-          Sign out
-        </Button>
-      </div>
-
+    <div className="flex flex-col h-full w-full">
       <Form {...form}>
-        <div className="flex flex-col gap-6 flex-1">
-          
-          {/* 2. Configuration & Metadata Section */}
+        <form onSubmit={form.handleSubmit(handleApplyNow)} className="flex flex-col gap-6 flex-1">
           <div className="bg-card border border-border rounded-xl p-5 shadow-sm space-y-5">
             <div className="flex items-center gap-2 mb-2">
               <Info className="w-4 h-4 text-primary" />
-              <h4 className="text-sm font-bold text-foreground uppercase tracking-wider">Admission Context</h4>
+              <h4 className="text-sm font-bold text-foreground uppercase tracking-wider">Application Details</h4>
             </div>
 
             <div className="space-y-4">
@@ -228,7 +118,7 @@ const EnrollmentForm: React.FC<EnrollmentFormProps> = ({
                   <FormItem>
                     <FormLabel className="text-xs text-muted-foreground font-semibold h-4 flex items-center">Selected Course</FormLabel>
                     <FormControl>
-                      <Input {...field} readOnly className="h-9 text-sm bg-secondary/50 font-medium cursor-not-allowed" />
+                      <Input {...field} readOnly value={course.name} className="h-9 text-sm bg-secondary/50 font-medium cursor-not-allowed" />
                     </FormControl>
                   </FormItem>
                 )}
@@ -241,7 +131,7 @@ const EnrollmentForm: React.FC<EnrollmentFormProps> = ({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-xs text-muted-foreground font-semibold flex items-center gap-1 h-4">
-                        <Phone className="w-3 h-3 text-accent" /> Phone Number (Optional)
+                        <Phone className="w-3 h-3 text-accent" /> Phone Number *
                       </FormLabel>
                       <FormControl>
                         <Input placeholder="Enter phone..." {...field} className="h-9 text-sm bg-secondary/30" />
@@ -259,7 +149,7 @@ const EnrollmentForm: React.FC<EnrollmentFormProps> = ({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-xs text-muted-foreground font-semibold flex items-center gap-1 h-4">
-                        <MapPin className="w-3 h-3 text-accent" /> Zip Code (Optional)
+                        <MapPin className="w-3 h-3 text-accent" /> Zip Code *
                       </FormLabel>
                       <FormControl>
                         <Input placeholder="Enter zip code..." {...field} className="h-9 text-sm bg-secondary/30" />
@@ -273,80 +163,15 @@ const EnrollmentForm: React.FC<EnrollmentFormProps> = ({
               </div>
 
               <Button 
-                type="button" 
-                onClick={handleApplyNow}
+                type="submit" 
                 disabled={isApplying}
                 className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-5 text-sm sm:text-base rounded-xl shadow-md transition-all font-sans"
               >
-                {isApplying ? "Submitting Application..." : "Apply for Admission Now"}
+                {isApplying ? "Submitting Application..." : "Confirm Application"}
               </Button>
             </div>
           </div>
-
-          {/* 3. Real Chatbox UI */}
-          <div className="flex flex-col border border-border rounded-xl overflow-hidden bg-card h-[400px] shadow-sm">
-            {/* Messages Container */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-secondary/10">
-              
-              {/* Automated Welcome Message */}
-              <div className="flex gap-2 sm:gap-3 max-w-[95%] sm:max-w-[85%]">
-                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0">
-                  <Image src="/icon.png" alt="Admin" width={20} height={20} className="object-contain" />
-                </div>
-                <div className="bg-white border border-border rounded-2xl rounded-tl-sm p-3 shadow-sm">
-                  <p className="text-sm text-foreground">
-                    Welcome {user?.displayName?.split(' ')[0] || 'there'}! 👋<br/><br/>
-                    You are applying for <strong>{course.name}</strong>. Our admissions team is ready to assist you. Do you have any questions about the curriculum, fees, or timings?
-                  </p>
-                  <span className="text-[10px] text-muted-foreground mt-2 block">Admissions Bot</span>
-                </div>
-              </div>
-
-              {/* User Messages */}
-              {mockMessages.map((msg) => (
-                <div key={msg.id} className="flex gap-2 sm:gap-3 max-w-[95%] sm:max-w-[85%] self-end ml-auto justify-end">
-                  <div className="bg-primary text-primary-foreground rounded-2xl rounded-tr-sm p-3 shadow-sm">
-                    <p className="text-sm">{msg.text}</p>
-                    <span className="text-[10px] text-primary-foreground/70 mt-1 block text-right">Sent</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Input Area */}
-            <div className="p-3 bg-card border-t border-border">
-              <FormField
-                control={form.control}
-                name="message"
-                render={({ field }) => (
-                  <FormItem className="flex items-end gap-2 space-y-0">
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Type your admission query..." 
-                        {...field}
-                        className="min-h-[50px] max-h-[120px] resize-none border-border focus-visible:ring-primary px-3 py-3 bg-background rounded-xl"
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-                            e.preventDefault();
-                            handleSendMessage();
-                          }
-                        }}
-                      />
-                    </FormControl>
-                    <Button 
-                      type="button"
-                      onClick={handleSendMessage} 
-                      disabled={isSubmitting || !field.value?.trim()} 
-                      className="shrink-0 rounded-full w-12 h-12 p-0 flex items-center justify-center bg-primary hover:bg-primary/90 text-primary-foreground shadow-md transition-transform active:scale-95"
-                    >
-                      <Send className="w-5 h-5 -ml-0.5" />
-                    </Button>
-                  </FormItem>
-                )}
-              />
-            </div>
-          </div>
-        </div>
+        </form>
       </Form>
     </div>
   );

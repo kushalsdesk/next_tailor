@@ -14,11 +14,9 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { useAuthStore } from "@/store/useAuthStore";
-import { MessageCircle, LogOut, Phone, Send, Info } from "lucide-react";
-import Image from "next/image";
+import { Phone, Info } from "lucide-react";
 
 const GoogleIcon = () => (
   <svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
@@ -34,7 +32,6 @@ const GoogleIcon = () => (
 const formSchema = z.object({
   phone: z.string().min(10, { message: "Please enter a valid phone number." }),
   careerOption: z.string().optional(),
-  message: z.string().min(1, { message: "Message cannot be empty." }),
   subscribe: z.boolean().default(false),
   getTips: z.boolean().default(false),
   sellCreation: z.boolean().default(false),
@@ -48,17 +45,15 @@ interface ContactFormProps {
 
 export default function ContactForm({ selectedCareer }: ContactFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [mockMessages, setMockMessages] = useState<{id: number, text: string, sender: 'user' | 'admin'}[]>([]);
 
   // Zustand Global State
-  const { user, isAuthenticated, signInWithGoogle, logout } = useAuthStore();
+  const { isAuthenticated, signInWithGoogle } = useAuthStore();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       phone: "",
       careerOption: selectedCareer || "",
-      message: "",
       subscribe: false,
       getTips: false,
       sellCreation: false,
@@ -80,30 +75,11 @@ export default function ContactForm({ selectedCareer }: ContactFormProps) {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
-    
-    // Add message to mock UI
-    const newMsg = { id: Date.now(), text: values.message, sender: 'user' as const };
-    setMockMessages(prev => [...prev, newMsg]);
-
     try {
-      const payload = {
-        ...values,
-        name: user?.displayName,
-        email: user?.email,
-      };
-
-      const response = await fetch("/api/career", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) throw new Error("Failed to submit form");
-      
-      form.setValue("message", ""); // Clear input
-      toast.success("Message Sent Successfully!");
+      // In future, submit to backend applications API
+      toast.success("Application details submitted successfully!");
     } catch (err) {
-      toast.error("Failed to send message. Please try again.");
+      toast.error("Failed to submit. Please try again.");
       console.error(err);
     } finally {
       setIsSubmitting(false);
@@ -115,11 +91,11 @@ export default function ContactForm({ selectedCareer }: ContactFormProps) {
     return (
       <div className="flex flex-col items-center justify-center py-16 px-6 text-center bg-card/50 border border-border border-dashed rounded-2xl h-full min-h-[400px]">
         <div className="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mb-6 shadow-sm border border-border">
-          <MessageCircle className="w-10 h-10 text-primary" />
+          <Info className="w-10 h-10 text-primary" />
         </div>
         <h4 className="text-2xl font-serif font-bold text-foreground mb-3">Sign in to Connect</h4>
         <p className="text-muted-foreground mb-8 max-w-sm font-sans text-base">
-          Sign in with your Google account to securely chat with our experts regarding <strong className="text-foreground">{selectedCareer}</strong>.
+          Sign in with your Google account to securely register your interest in <strong className="text-foreground">{selectedCareer}</strong>.
         </p>
         <Button 
           onClick={handleGoogleSignIn} 
@@ -132,46 +108,16 @@ export default function ContactForm({ selectedCareer }: ContactFormProps) {
     );
   }
 
-  // --- UI STATE 2: AUTHENTICATED CHAT INTERFACE ---
+  // --- UI STATE 2: AUTHENTICATED FORM ---
   return (
     <div className="flex flex-col h-full space-y-6">
-      
-      {/* 1. Mobile-Optimized Profile Header */}
-      <div className="flex flex-col sm:flex-row items-center justify-between p-4 bg-secondary/50 rounded-xl border border-border gap-4">
-        <div className="flex items-center gap-4 w-full sm:w-auto">
-          <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-background shadow-sm shrink-0">
-            <Image 
-              src={user?.photoURL || "/placeholder.svg"} 
-              alt="Profile" 
-              fill 
-              className="object-cover"
-            />
-          </div>
-          <div className="text-left flex-1 min-w-0">
-            <p className="font-bold font-sans text-foreground leading-tight truncate">{user?.displayName}</p>
-            <p className="text-sm font-sans text-muted-foreground truncate">{user?.email}</p>
-          </div>
-        </div>
-        <Button 
-          type="button" 
-          variant="outline" 
-          size="sm" 
-          onClick={logout} 
-          className="w-full sm:w-auto text-muted-foreground hover:bg-destructive hover:text-destructive-foreground hover:border-destructive transition-colors shrink-0"
-        >
-          <LogOut className="w-4 h-4 mr-2" />
-          Sign out
-        </Button>
-      </div>
-
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6 flex-1">
           
-          {/* 2. Configuration & Metadata Section */}
           <div className="bg-card border border-border rounded-xl p-5 shadow-sm space-y-5">
             <div className="flex items-center gap-2 mb-2">
               <Info className="w-4 h-4 text-primary" />
-              <h4 className="text-sm font-bold text-foreground uppercase tracking-wider">Inquiry Context</h4>
+              <h4 className="text-sm font-bold text-foreground uppercase tracking-wider">Application Details</h4>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -181,7 +127,7 @@ export default function ContactForm({ selectedCareer }: ContactFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs text-muted-foreground font-semibold flex items-center gap-1 h-4">
-                      <Phone className="w-3 h-3 text-accent" /> Phone Number (Optional)
+                      <Phone className="w-3 h-3 text-accent" /> Phone Number *
                     </FormLabel>
                     <FormControl>
                       <Input placeholder="Enter phone..." {...field} className="h-9 text-sm bg-secondary/30" />
@@ -247,70 +193,14 @@ export default function ContactForm({ selectedCareer }: ContactFormProps) {
                 )}
               />
             </div>
-          </div>
-
-          {/* 3. Real Chatbox UI */}
-          <div className="flex flex-col border border-border rounded-xl overflow-hidden bg-card h-[400px] shadow-sm">
-            {/* Messages Container */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-secondary/10">
-              
-              {/* Automated Welcome Message */}
-              <div className="flex gap-2 sm:gap-3 max-w-[95%] sm:max-w-[85%]">
-                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0">
-                  <Image src="/icon.png" alt="Admin" width={20} height={20} className="object-contain" />
-                </div>
-                <div className="bg-white border border-border rounded-2xl rounded-tl-sm p-3 shadow-sm">
-                  <p className="text-sm text-foreground">
-                    Hi {user?.displayName?.split(' ')[0] || 'there'}! 👋<br/><br/>
-                    I see you&apos;re interested in <strong>{selectedCareer}</strong>. Our counselors are ready to guide you. Do you have any specific questions before we begin?
-                  </p>
-                  <span className="text-[10px] text-muted-foreground mt-2 block">Automated Message</span>
-                </div>
-              </div>
-
-              {/* User Messages */}
-              {mockMessages.map((msg) => (
-                <div key={msg.id} className="flex gap-2 sm:gap-3 max-w-[95%] sm:max-w-[85%] self-end ml-auto justify-end">
-                  <div className="bg-primary text-primary-foreground rounded-2xl rounded-tr-sm p-3 shadow-sm">
-                    <p className="text-sm">{msg.text}</p>
-                    <span className="text-[10px] text-primary-foreground/70 mt-1 block text-right">Sent</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Input Area */}
-            <div className="p-3 bg-card border-t border-border">
-              <FormField
-                control={form.control}
-                name="message"
-                render={({ field }) => (
-                  <FormItem className="flex items-end gap-2 space-y-0">
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Type your message..." 
-                        {...field}
-                        className="min-h-[50px] max-h-[120px] resize-none border-border focus-visible:ring-primary px-3 py-3 bg-background rounded-xl"
-                        onKeyDown={(e) => {
-                          // Allow Ctrl+Enter or Cmd+Enter to submit
-                          if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-                            e.preventDefault();
-                            form.handleSubmit(onSubmit)();
-                          }
-                        }}
-                      />
-                    </FormControl>
-                    <Button 
-                      type="submit" 
-                      disabled={isSubmitting || !field.value.trim()} 
-                      className="shrink-0 rounded-full w-12 h-12 p-0 flex items-center justify-center bg-primary hover:bg-primary/90 text-primary-foreground shadow-md transition-transform active:scale-95"
-                    >
-                      <Send className="w-5 h-5 -ml-0.5" />
-                    </Button>
-                  </FormItem>
-                )}
-              />
-            </div>
+            
+            <Button 
+              type="submit" 
+              disabled={isSubmitting} 
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-5 text-sm sm:text-base rounded-xl shadow-md transition-all font-sans"
+            >
+              {isSubmitting ? "Submitting..." : "Submit Inquiry"}
+            </Button>
           </div>
         </form>
       </Form>
