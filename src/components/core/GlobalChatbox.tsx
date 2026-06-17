@@ -10,6 +10,13 @@ import Image from "next/image";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
+type MessageType = {
+  _id: string;
+  sender: string;
+  text: string;
+  createdAt: string;
+};
+
 const GoogleIcon = () => (
   <svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
     <g transform="matrix(1, 0, 0, 1, 27.009001, -39.238998)">
@@ -197,7 +204,7 @@ export default function GlobalChatbox() {
                     </div>
                   )}
 
-                  {messages.map((msg: any) => (
+                  {messages.map((msg: MessageType) => (
                     <div key={msg._id} className={`flex gap-2 max-w-[85%] ${msg.sender === 'user' ? 'self-end ml-auto justify-end' : ''}`}>
                       <div className={`${msg.sender === 'user' ? 'bg-primary text-primary-foreground rounded-2xl rounded-tr-sm' : 'bg-white border border-border rounded-2xl rounded-tl-sm'} p-3 shadow-sm`}>
                         <p className="text-sm whitespace-pre-wrap">{msg.text}</p>

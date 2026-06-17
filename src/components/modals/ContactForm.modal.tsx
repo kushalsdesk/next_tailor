@@ -73,7 +73,7 @@ export default function ContactForm({ selectedCareer }: ContactFormProps) {
     }
   };
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit() {
     setIsSubmitting(true);
     try {
       // In future, submit to backend applications API

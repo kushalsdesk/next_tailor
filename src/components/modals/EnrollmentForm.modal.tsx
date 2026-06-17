@@ -64,7 +64,7 @@ const EnrollmentForm: React.FC<EnrollmentFormProps> = ({ course }) => {
     }
   };
 
-  const handleApplyNow = async (values: z.infer<typeof enrollmentSchema>) => {
+  const handleApplyNow = async () => {
     setIsApplying(true);
     try {
       // In future, save this to MongoDB applications collection

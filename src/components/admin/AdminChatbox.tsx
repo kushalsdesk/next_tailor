@@ -9,8 +9,23 @@ import Image from "next/image";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
+type ConversationType = {
+  _id: string;
+  userInfo?: { photoURL?: string; displayName?: string; email?: string };
+  context?: string;
+  lastMessage?: string;
+  updatedAt?: string;
+};
+
+type MessageType = {
+  _id: string;
+  sender: string;
+  text: string;
+  createdAt: string;
+};
+
 export default function AdminChatbox() {
-  const [selectedConversation, setSelectedConversation] = useState<any>(null);
+  const [selectedConversation, setSelectedConversation] = useState<ConversationType | null>(null);
   const [replyText, setReplyText] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -70,7 +85,7 @@ export default function AdminChatbox() {
           {conversations.length === 0 ? (
             <div className="p-6 text-center text-muted-foreground text-sm">No conversations found.</div>
           ) : (
-            conversations.map((conv: any) => (
+            conversations.map((conv: ConversationType) => (
               <button
                 key={conv._id}
                 onClick={() => setSelectedConversation(conv)}
@@ -143,7 +158,7 @@ export default function AdminChatbox() {
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-secondary/5">
-              {messages.map((msg: any) => (
+              {messages.map((msg: MessageType) => (
                 <div key={msg._id} className={`flex gap-3 max-w-[85%] ${msg.sender === 'admin' ? 'self-end ml-auto justify-end' : ''}`}>
                   <div className={`${msg.sender === 'admin' ? 'bg-primary text-primary-foreground rounded-2xl rounded-tr-sm' : 'bg-card border border-border rounded-2xl rounded-tl-sm'} p-4 shadow-sm`}>
                     <p className={`text-sm ${msg.sender === 'admin' ? '' : 'text-foreground'} whitespace-pre-wrap`}>{msg.text}</p>

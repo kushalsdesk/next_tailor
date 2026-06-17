@@ -9,10 +9,15 @@ if (!MONGODB_URI) {
 }
 
 // Global caching for Mongoose connection in Serverless Environments
-let cached = (global as any).mongoose;
+declare global {
+  // eslint-disable-next-line no-var
+  var mongoose: { conn: typeof import("mongoose") | null; promise: Promise<typeof import("mongoose")> | null } | undefined;
+}
+
+let cached = global.mongoose;
 
 if (!cached) {
-  cached = (global as any).mongoose = { conn: null, promise: null };
+  cached = global.mongoose = { conn: null, promise: null };
 }
 
 async function connectToDB() {

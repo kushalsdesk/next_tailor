@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import connectToDB from "@/lib/mongoose";
-import { Conversation, User } from "@/lib/models";
+import { Conversation } from "@/lib/models";
 
 export async function GET(req: Request) {
   try {
@@ -8,11 +8,11 @@ export async function GET(req: Request) {
     const url = new URL(req.url);
     const userId = url.searchParams.get("userId");
     const type = url.searchParams.get("type");
-    const context = url.searchParams.get("context");
+
 
     // 1. Fetch exact conversation for a USER
     if (userId && type) {
-      let conv = await Conversation.findOne({ userId, type });
+      const conv = await Conversation.findOne({ userId, type });
       
       // Do NOT auto-create here. Just return the conversation or null.
       if (!conv) {
