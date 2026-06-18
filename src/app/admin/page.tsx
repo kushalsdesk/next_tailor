@@ -13,6 +13,7 @@ import AdminApplications from "@/components/admin/AdminApplications";
 import AdminUsers from "@/components/admin/AdminUsers";
 import { FileText } from "lucide-react";
 import useSWR from "swr";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -24,7 +25,7 @@ export default function AdminPage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const router = useRouter();
 
-  const { data: statsData } = useSWR<{ stats: { pendingApplications: number, unreadQueries: number, totalUsers: number } }>("/api/admin/stats", fetcher);
+  const { data: statsData } = useSWR<{ stats: { pendingApplications: number, unreadQueries: number, totalUsers: number }, graphData: { name: string; users: number; applications: number }[] }>("/api/admin/stats", fetcher);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -242,18 +243,50 @@ export default function AdminPage() {
           
           {/* Tab Rendering */}
           {activeTab === "overview" && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
-                <h3 className="text-muted-foreground text-sm font-semibold mb-2">Pending Applications</h3>
-                <p className="text-3xl font-bold">{statsData?.stats?.pendingApplications || 0}</p>
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
+                  <h3 className="text-muted-foreground text-sm font-semibold mb-2">Pending Applications</h3>
+                  <p className="text-3xl font-bold">{statsData?.stats?.pendingApplications || 0}</p>
+                </div>
+                <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
+                  <h3 className="text-muted-foreground text-sm font-semibold mb-2">Unread Queries</h3>
+                  <p className="text-3xl font-bold">{statsData?.stats?.unreadQueries || 0}</p>
+                </div>
+                <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
+                  <h3 className="text-muted-foreground text-sm font-semibold mb-2">Total Users</h3>
+                  <p className="text-3xl font-bold">{statsData?.stats?.totalUsers || 0}</p>
+                </div>
               </div>
+
               <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
-                <h3 className="text-muted-foreground text-sm font-semibold mb-2">Unread Queries</h3>
-                <p className="text-3xl font-bold">{statsData?.stats?.unreadQueries || 0}</p>
-              </div>
-              <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
-                <h3 className="text-muted-foreground text-sm font-semibold mb-2">Total Users</h3>
-                <p className="text-3xl font-bold">{statsData?.stats?.totalUsers || 0}</p>
+                <h3 className="text-xl font-bold text-foreground mb-6">Growth Overview (Last 6 Months)</h3>
+                <div className="h-[350px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={statsData?.graphData || []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#eab308" stopOpacity={0.6}/>
+                          <stop offset="95%" stopColor="#eab308" stopOpacity={0}/>
+                        </linearGradient>
+                        <linearGradient id="colorApps" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#4c1d95" stopOpacity={0.6}/>
+                          <stop offset="95%" stopColor="#4c1d95" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                      <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#333333" opacity={0.2} />
+                      <Tooltip 
+                        contentStyle={{ backgroundColor: '#1e1e2f', borderColor: '#333333', borderRadius: '8px', color: '#fff' }}
+                        itemStyle={{ color: '#fff' }}
+                      />
+                      <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
+                      <Area type="monotone" dataKey="users" name="New Users" stroke="#eab308" strokeWidth={3} fillOpacity={1} fill="url(#colorUsers)" />
+                      <Area type="monotone" dataKey="applications" name="New Applications" stroke="#4c1d95" strokeWidth={3} fillOpacity={1} fill="url(#colorApps)" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
             </div>
           )}

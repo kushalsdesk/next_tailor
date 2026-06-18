@@ -5,6 +5,7 @@ import useSWR from "swr";
 import { Send, User as UserIcon, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
@@ -15,6 +16,7 @@ type ConversationType = {
   context?: string;
   lastMessage?: string;
   updatedAt?: string;
+  from?: string;
 };
 
 type MessageType = {
@@ -73,7 +75,8 @@ export default function AdminChatbox() {
   };
 
   return (
-    <div className="flex bg-card border border-border rounded-2xl h-[600px] overflow-hidden shadow-sm">
+    <div className="flex flex-col gap-4 h-[600px]">
+      <div className="flex-1 flex bg-card border border-border rounded-2xl overflow-hidden shadow-sm min-h-0">
       
       {/* LEFT SIDEBAR: User List */}
       <div className={`${selectedConversation ? 'hidden md:flex' : 'flex'} w-full md:w-1/3 border-r border-border bg-secondary/10 overflow-y-auto flex-col shrink-0`}>
@@ -104,13 +107,18 @@ export default function AdminChatbox() {
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-sm text-foreground truncate">
-                      {conv.userInfo?.displayName || "Unknown User"}
-                    </p>
+                    <div className="flex items-center justify-between mb-0.5">
+                      <p className={`text-sm truncate ${conv.from === "user" ? "font-bold text-foreground" : "font-semibold text-muted-foreground"}`}>
+                        {conv.userInfo?.displayName || "Unknown User"}
+                      </p>
+                      {conv.from === "user" && (
+                        <Badge variant="default" className="text-[9px] px-1.5 py-0 h-4 shrink-0 ml-2">New</Badge>
+                      )}
+                    </div>
                     <p className="text-xs text-primary font-medium truncate mb-1">
                       {conv.context}
                     </p>
-                    <p className="text-xs text-muted-foreground truncate">
+                    <p className={`text-xs truncate ${conv.from === "user" ? "text-foreground font-medium" : "text-muted-foreground"}`}>
                       {conv.lastMessage || "No messages yet"}
                     </p>
                   </div>
@@ -164,40 +172,41 @@ export default function AdminChatbox() {
             </div>
 
             {/* Input & Controls */}
-            <div className="p-4 bg-card border-t border-border flex flex-col gap-3">
-              <div className="flex gap-3 items-end">
-                <Textarea 
-                  placeholder="Type your reply to the user..."
-                  value={replyText}
-                  onChange={(e) => setReplyText(e.target.value)}
-                  maxLength={500}
-                  className="min-h-[60px] max-h-[150px] resize-none bg-background rounded-xl focus-visible:ring-primary text-sm"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-                      e.preventDefault();
-                      handleSendReply();
-                    }
-                  }}
-                />
-                <Button 
-                  onClick={handleSendReply}
-                  disabled={!replyText.trim()}
-                  className="shrink-0 h-12 w-12 rounded-full p-0 flex items-center justify-center bg-primary text-primary-foreground shadow-md hover:bg-primary/90"
-                >
-                  <Send className="w-5 h-5 -ml-0.5" />
-                </Button>
-              </div>
+            <div className="p-4 bg-card border-t border-border flex gap-3 items-end">
+              <Textarea 
+                placeholder="Type your reply to the user..."
+                value={replyText}
+                onChange={(e) => setReplyText(e.target.value)}
+                maxLength={500}
+                className="min-h-[60px] max-h-[150px] resize-none bg-background rounded-xl focus-visible:ring-primary text-sm"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                    e.preventDefault();
+                    handleSendReply();
+                  }
+                }}
+              />
               <Button 
-                variant="outline" 
-                className="w-full md:hidden flex items-center justify-center text-muted-foreground border-border hover:bg-secondary/50" 
-                onClick={() => setSelectedConversation(null)}
+                onClick={handleSendReply}
+                disabled={!replyText.trim()}
+                className="shrink-0 h-12 w-12 rounded-full p-0 flex items-center justify-center bg-primary text-primary-foreground shadow-md hover:bg-primary/90"
               >
-                <ArrowLeft className="w-4 h-4 mr-2" /> Back to User Inquiries
+                <Send className="w-5 h-5 -ml-0.5" />
               </Button>
             </div>
           </>
         )}
       </div>
+    </div>
+      {/* Mobile Back Button (Outside chatbox container, bottom center) */}
+      {selectedConversation && (
+        <Button 
+          onClick={() => setSelectedConversation(null)}
+          className="md:hidden self-center rounded-full bg-primary text-primary-foreground flex items-center shadow-md hover:bg-primary/90 pl-3 pr-4 h-10 shrink-0"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" /> Back
+        </Button>
+      )}
     </div>
   );
 }

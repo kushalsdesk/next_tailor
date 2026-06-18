@@ -2,8 +2,8 @@
 
 import useSWR from "swr";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { Users, Mail, Clock } from "lucide-react";
+import Image from "next/image";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -60,14 +60,13 @@ export default function AdminUsers() {
             <TableRow>
               <TableHead>User</TableHead>
               <TableHead>Contact</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Last Seen</TableHead>
+              <TableHead>Joined</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {users.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-12 text-muted-foreground">
+                <TableCell colSpan={3} className="text-center py-12 text-muted-foreground">
                   No users found.
                 </TableCell>
               </TableRow>
@@ -77,7 +76,9 @@ export default function AdminUsers() {
                   <TableCell>
                     <div className="flex items-center gap-3">
                       {user.photoURL ? (
-                        <img src={user.photoURL} alt={user.displayName} className="w-10 h-10 rounded-full border border-border" />
+                        <div className="relative w-10 h-10 rounded-full overflow-hidden shrink-0 border border-border">
+                          <Image src={user.photoURL} alt={user.displayName || "User"} fill className="object-cover" />
+                        </div>
                       ) : (
                         <div className="w-10 h-10 bg-primary/10 text-primary font-bold flex items-center justify-center rounded-full">
                           {user.displayName?.charAt(0) || user.email.charAt(0).toUpperCase()}
@@ -92,14 +93,9 @@ export default function AdminUsers() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={user.role === "admin" ? "default" : "secondary"} className="capitalize">
-                      {user.role}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Clock className="w-3 h-3" /> 
-                      {user.lastSeen ? new Date(user.lastSeen).toLocaleDateString() : "Never"}
+                      {user.createdAt ? new Date(user.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : "Unknown"}
                     </div>
                   </TableCell>
                 </TableRow>

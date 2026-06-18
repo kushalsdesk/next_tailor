@@ -74,7 +74,7 @@ export default function AdminApplications() {
             onClick={() => setActiveTab("admissions")}
             className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all ${
               activeTab === "admissions" 
-                ? "bg-background text-foreground shadow-sm border border-border/50" 
+                ? "bg-primary text-primary-foreground shadow-md" 
                 : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
             }`}
           >
@@ -85,7 +85,7 @@ export default function AdminApplications() {
             onClick={() => setActiveTab("inquiries")}
             className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all ${
               activeTab === "inquiries" 
-                ? "bg-background text-foreground shadow-sm border border-border/50" 
+                ? "bg-primary text-primary-foreground shadow-md" 
                 : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
             }`}
           >
