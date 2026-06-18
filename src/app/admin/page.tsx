@@ -134,7 +134,7 @@ export default function AdminPage() {
     { id: "messages", label: "User Inquiries", icon: <MessageSquare className="w-4 h-4" /> },
     { id: "applications", label: "Application Management", icon: <FileText className="w-4 h-4" /> },
     { id: "gallery", label: "Manage Gallery", icon: <ImageIcon className="w-4 h-4" /> },
-    { id: "users", label: "Registered Users", icon: <Users className="w-4 h-4" /> },
+    { id: "users", label: "User Management", icon: <Users className="w-4 h-4" /> },
   ] as const;
 
   // If authenticated AND is admin -> Show Dashboard

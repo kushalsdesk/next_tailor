@@ -41,7 +41,7 @@ export default function GlobalChatbox() {
   // Fetch Conversation
   useEffect(() => {
     if (user && isAuthenticated && isOpen) {
-      fetch(`/api/conversations?userId=${user.uid}&type=general&context=General Inquiry`)
+      fetch(`/api/conversations?userId=${user.uid}`)
         .then(res => res.json())
         .then(data => {
           if (data && data._id) setConversationId(data._id);
@@ -100,9 +100,7 @@ export default function GlobalChatbox() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            userId: user.uid,
-            type: "general",
-            context: "General Inquiry"
+            userId: user.uid
           })
         });
         const data = await res.json();

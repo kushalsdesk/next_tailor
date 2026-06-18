@@ -8,6 +8,7 @@ export interface UserProfile {
   displayName: string | null;
   photoURL: string | null;
   role: 'admin' | 'user';
+  isBlocked?: boolean;
 }
 
 interface AuthState {
@@ -43,7 +44,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   initializeAuthListener: () => {
     // Listen for Firebase Auth state changes globally
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         // Assign 'admin' role if the email matches the predefined admin address
         const role = firebaseUser.email === "admin@ashaafoundation.com" ? "admin" : "user";
@@ -54,20 +55,38 @@ export const useAuthStore = create<AuthState>((set) => ({
           displayName: firebaseUser.displayName,
           photoURL: firebaseUser.photoURL,
           role,
+          isBlocked: false,
         };
 
+        // First set optimistically
         set({
           user: userProfile,
           isAuthenticated: true,
-          isAuthLoading: false,
+          isAuthLoading: true, // Keep loading true until DB check finishes
         });
 
-        // Sync to MongoDB via API Route
-        fetch("/api/users", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(userProfile),
-        }).catch(err => console.error("Failed to sync user to DB", err));
+        // Sync to MongoDB via API Route and fetch isBlocked status
+        try {
+          const res = await fetch("/api/users", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(userProfile),
+          });
+          const dbUser = await res.json();
+          
+          if (dbUser && dbUser.isBlocked !== undefined) {
+            userProfile.isBlocked = dbUser.isBlocked;
+          }
+
+          set({
+            user: userProfile,
+            isAuthenticated: true,
+            isAuthLoading: false, // Done loading
+          });
+        } catch (err) {
+          console.error("Failed to sync user to DB", err);
+          set({ isAuthLoading: false });
+        }
       } else {
         set({ user: null, isAuthenticated: false, isAuthLoading: false });
       }

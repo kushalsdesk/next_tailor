@@ -13,7 +13,6 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json());
 type ConversationType = {
   _id: string;
   userInfo?: { photoURL?: string; displayName?: string; email?: string };
-  context?: string;
   lastMessage?: string;
   updatedAt?: string;
   from?: string;
@@ -31,9 +30,9 @@ export default function AdminChatbox() {
   const [replyText, setReplyText] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // 1. Fetch all general conversations
+  // 1. Fetch all conversations
   const { data: conversations = [], mutate: mutateConvos } = useSWR(
-    `/api/conversations?type=general`,
+    `/api/conversations`,
     fetcher,
     { refreshInterval: 30000 } // Poll every 30s
   );
@@ -115,9 +114,6 @@ export default function AdminChatbox() {
                         <Badge variant="default" className="text-[9px] px-1.5 py-0 h-4 shrink-0 ml-2">New</Badge>
                       )}
                     </div>
-                    <p className="text-xs text-primary font-medium truncate mb-1">
-                      {conv.context}
-                    </p>
                     <p className={`text-xs truncate ${conv.from === "user" ? "text-foreground font-medium" : "text-muted-foreground"}`}>
                       {conv.lastMessage || "No messages yet"}
                     </p>

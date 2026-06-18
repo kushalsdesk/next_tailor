@@ -8,6 +8,7 @@ export interface IUser extends Document {
   photoURL: string;
   role: string;
   lastSeen: Date;
+  isBlocked: boolean;
 }
 
 const UserSchema = new Schema<IUser>(
@@ -18,6 +19,7 @@ const UserSchema = new Schema<IUser>(
     photoURL: { type: String },
     role: { type: String, default: "user" },
     lastSeen: { type: Date, default: Date.now },
+    isBlocked: { type: Boolean, default: false },
   },
   { timestamps: true },
 );
@@ -25,8 +27,6 @@ const UserSchema = new Schema<IUser>(
 // --- Conversations ---
 export interface IConversation extends Document {
   userId: string; // Foreign key matching User.uid
-  type: string;
-  context: string;
   lastMessage: string;
   from: "user" | "admin";
 }
@@ -34,8 +34,6 @@ export interface IConversation extends Document {
 const ConversationSchema = new Schema<IConversation>(
   {
     userId: { type: String, required: true },
-    type: { type: String, required: true },
-    context: { type: String, required: true },
     lastMessage: { type: String, default: "" },
     from: { type: String, enum: ["user", "admin"], required: true },
   },

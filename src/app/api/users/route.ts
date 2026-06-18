@@ -34,8 +34,28 @@ export async function POST(req: Request) {
 export async function GET() {
   try {
     await connectToDB();
-    // Fetch all users except admin
-    const users = await User.find({ role: "user" }).sort({ createdAt: -1 }).lean();
+    // Fetch all users except admin, and lookup their admission status
+    const users = await User.aggregate([
+      { $match: { role: "user" } },
+      { 
+        $lookup: {
+          from: "admissions", // Mongoose pluralizes models by default
+          localField: "uid",
+          foreignField: "userId",
+          as: "admissions"
+        }
+      },
+      {
+        $addFields: {
+          isAdmitted: {
+            $in: ["accepted", "$admissions.status"]
+          }
+        }
+      },
+      { $project: { admissions: 0 } },
+      { $sort: { createdAt: -1 } }
+    ]);
+    
     return NextResponse.json({ success: true, users });
   } catch (error) {
     console.error("User API Error:", error);
