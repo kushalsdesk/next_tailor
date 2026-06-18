@@ -1,62 +1,34 @@
-import { AdminEmailTemplate } from "@/components/templates/admin.admission.template";
-import { UserEmailTemplate } from "@/components/templates/user.admission.template";
-import { Resend } from "resend";
+import connectToDB from "@/lib/mongoose";
+import { Admission } from "@/lib/models";
 
-const resend = new Resend(process.env.NEXT_PUBLIC_RESEND_API_KEY);
 export async function GET() {
   return Response.json({ success: true });
 }
 
 export async function POST(req: Request) {
   const formData = await req.json();
-  const { firstName, lastName, course, address, pincode, phone, email } =
-    formData;
+  const { firstName, lastName, course, pincode, phone, email, userId } = formData;
 
   try {
-    const userResponse = await resend.emails.send({
-      from: "ASHAA Institute <admin@emails.ashaafoundation.in>",
-      to: [email],
-      subject: "Enrollment Confirmation",
-      react: UserEmailTemplate({
-        firstName,
-        course,
-      }),
+    await connectToDB();
+    const app = new Admission({
+      userId,
+      name: `${firstName || ""} ${lastName || ""}`.trim(),
+      course,
+      phone,
+      zipcode: pincode,
+      email,
+      status: "submitted",
     });
+    await app.save();
 
-    if (userResponse.error) {
-      console.error("User Email Error:", userResponse.error);
-      return Response.json({ userError: userResponse.error }, { status: 500 });
-    }
-
-    const adminResponse = await resend.emails.send({
-      from: "ASHAA Institute <admin@emails.ashaafoundation.in>",
-      to: ["ashaafoundation25@gmail.com"],
-      subject: "New Enrollment Notification",
-      react: AdminEmailTemplate({
-        firstName,
-        lastName,
-        course,
-        address,
-        pincode,
-        phone,
-        email,
-      }),
-    });
-
-    if (adminResponse.error) {
-      console.error("Admin Email Error:", adminResponse.error);
-      return Response.json(
-        { adminError: adminResponse.error },
-        { status: 500 },
-      );
-    }
-
-    return Response.json({ success: true });
+    return Response.json({ success: true, application: app });
   } catch (error) {
-    console.error("Error Sending Emails:", error);
+    console.error("Error Saving Application:", error);
     return Response.json(
       { error: (error as Error).message || "An unknown error occurred" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
+

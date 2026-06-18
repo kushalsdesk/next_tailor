@@ -32,8 +32,8 @@ export async function POST(req: Request) {
     // 1. Save the new message
     const newMsg = await Message.create({ conversationId, sender, text });
     
-    // 2. Update the parent conversation's lastMessage and timestamp
-    const updateData: Record<string, unknown> = { lastMessage: text, updatedAt: new Date() };
+    // 2. Update the parent conversation's lastMessage, from, and timestamp
+    const updateData: Record<string, unknown> = { lastMessage: text, from: sender, updatedAt: new Date() };
     if (context) updateData.context = context; // allow updating context
 
     await Conversation.findByIdAndUpdate(conversationId, updateData);

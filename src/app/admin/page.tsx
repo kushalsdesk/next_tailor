@@ -6,16 +6,24 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Lock, ShieldCheck, LogOut, LayoutDashboard, MessageSquare, BookOpen, Image as ImageIcon, Users } from "lucide-react";
+import { Lock, ShieldCheck, LogOut, LayoutDashboard, MessageSquare, Image as ImageIcon, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import AdminChatbox from "@/components/admin/AdminChatbox";
+import AdminApplications from "@/components/admin/AdminApplications";
+import AdminUsers from "@/components/admin/AdminUsers";
+import { FileText } from "lucide-react";
+import useSWR from "swr";
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export default function AdminPage() {
   const { user, isAuthLoading, signInWithEmail, logout } = useAuthStore();
   const [password, setPassword] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const [activeTab, setActiveTab] = useState<"overview" | "messages" | "courses" | "gallery" | "users">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "messages" | "applications" | "gallery" | "users">("overview");
   const router = useRouter();
+
+  const { data: statsData } = useSWR<{ stats: { pendingApplications: number, unreadQueries: number, totalUsers: number } }>("/api/admin/stats", fetcher);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,7 +130,7 @@ export default function AdminPage() {
   const tabs = [
     { id: "overview", label: "Dashboard", icon: <LayoutDashboard className="w-4 h-4" /> },
     { id: "messages", label: "User Inquiries", icon: <MessageSquare className="w-4 h-4" /> },
-    { id: "courses", label: "Manage Courses", icon: <BookOpen className="w-4 h-4" /> },
+    { id: "applications", label: "Application Management", icon: <FileText className="w-4 h-4" /> },
     { id: "gallery", label: "Manage Gallery", icon: <ImageIcon className="w-4 h-4" /> },
     { id: "users", label: "Registered Users", icon: <Users className="w-4 h-4" /> },
   ] as const;
@@ -144,7 +152,7 @@ export default function AdminPage() {
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as "overview" | "messages" | "courses" | "gallery" | "users")}
+              onClick={() => setActiveTab(tab.id as "overview" | "messages" | "applications" | "gallery" | "users")}
               className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors font-medium text-sm whitespace-nowrap ${
                 activeTab === tab.id 
                   ? "bg-primary text-primary-foreground shadow-sm" 
@@ -187,15 +195,15 @@ export default function AdminPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
                 <h3 className="text-muted-foreground text-sm font-semibold mb-2">Pending Applications</h3>
-                <p className="text-3xl font-bold">0</p>
+                <p className="text-3xl font-bold">{statsData?.stats?.pendingApplications || 0}</p>
               </div>
               <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
                 <h3 className="text-muted-foreground text-sm font-semibold mb-2">Unread Queries</h3>
-                <p className="text-3xl font-bold">0</p>
+                <p className="text-3xl font-bold">{statsData?.stats?.unreadQueries || 0}</p>
               </div>
               <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
                 <h3 className="text-muted-foreground text-sm font-semibold mb-2">Total Users</h3>
-                <p className="text-3xl font-bold">0</p>
+                <p className="text-3xl font-bold">{statsData?.stats?.totalUsers || 0}</p>
               </div>
             </div>
           )}
@@ -204,12 +212,8 @@ export default function AdminPage() {
             <AdminChatbox />
           )}
 
-          {activeTab === "courses" && (
-            <div className="bg-card border border-border rounded-2xl p-12 text-center text-muted-foreground shadow-sm">
-              <BookOpen className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <h2 className="text-xl font-bold text-foreground mb-2">Manage Courses</h2>
-              <p>Firestore integration pending for editing duration and fees.</p>
-            </div>
+          {activeTab === "applications" && (
+            <AdminApplications />
           )}
 
           {activeTab === "gallery" && (
@@ -221,11 +225,7 @@ export default function AdminPage() {
           )}
 
           {activeTab === "users" && (
-            <div className="bg-card border border-border rounded-2xl p-12 text-center text-muted-foreground shadow-sm">
-              <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <h2 className="text-xl font-bold text-foreground mb-2">Registered Users</h2>
-              <p>Firestore integration pending for viewing Google signed-in users.</p>
-            </div>
+            <AdminUsers />
           )}
 
         </div>

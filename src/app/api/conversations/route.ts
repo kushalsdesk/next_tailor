@@ -60,7 +60,8 @@ export async function POST(req: Request) {
       userId: body.userId,
       type: body.type,
       context: body.context,
-      lastMessage: ""
+      lastMessage: "",
+      from: "user"
     });
 
     return NextResponse.json(conv);

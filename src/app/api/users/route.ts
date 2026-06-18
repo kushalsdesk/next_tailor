@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import connectToDB from "@/lib/mongoose";
 import { User } from "@/lib/models";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: Request) {
   try {
     await connectToDB();
@@ -24,6 +26,17 @@ export async function POST(req: Request) {
     );
 
     return NextResponse.json(user);
+  } catch (error) {
+    console.error("User API Error:", error);
+    return NextResponse.json({ error: "Server Error" }, { status: 500 });
+  }
+}
+export async function GET() {
+  try {
+    await connectToDB();
+    // Fetch all users except admin
+    const users = await User.find({ role: "user" }).sort({ createdAt: -1 }).lean();
+    return NextResponse.json({ success: true, users });
   } catch (error) {
     console.error("User API Error:", error);
     return NextResponse.json({ error: "Server Error" }, { status: 500 });

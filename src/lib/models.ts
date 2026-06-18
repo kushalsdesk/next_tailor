@@ -19,7 +19,7 @@ const UserSchema = new Schema<IUser>(
     role: { type: String, default: "user" },
     lastSeen: { type: Date, default: Date.now },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // --- Conversations ---
@@ -28,6 +28,7 @@ export interface IConversation extends Document {
   type: string;
   context: string;
   lastMessage: string;
+  from: "user" | "admin";
 }
 
 const ConversationSchema = new Schema<IConversation>(
@@ -36,8 +37,9 @@ const ConversationSchema = new Schema<IConversation>(
     type: { type: String, required: true },
     context: { type: String, required: true },
     lastMessage: { type: String, default: "" },
+    from: { type: String, enum: ["user", "admin"], required: true },
   },
-  { timestamps: true } // Creates createdAt and updatedAt
+  { timestamps: true }, // Creates createdAt and updatedAt
 );
 
 // --- Messages ---
@@ -49,35 +51,83 @@ export interface IMessage extends Document {
 
 const MessageSchema = new Schema<IMessage>(
   {
-    conversationId: { type: Schema.Types.ObjectId, ref: "Conversation", required: true },
+    conversationId: {
+      type: Schema.Types.ObjectId,
+      ref: "Conversation",
+      required: true,
+    },
     sender: { type: String, enum: ["user", "admin"], required: true },
     text: { type: String, required: true },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-// --- Applications ---
-export interface IApplication extends Document {
-  userId: string;
+// --- Admissions ---
+export interface IAdmission extends Document {
+  userId?: string;
+  name: string;
   course: string;
   phone: string;
-  zipcode: string;
-  name: string;
   email: string;
-  status: string;
+  zipcode?: string;
+  status: "submitted" | "reviewed" | "accepted" | "rejected";
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-const ApplicationSchema = new Schema<IApplication>(
+const AdmissionSchema: Schema = new Schema(
   {
-    userId: { type: String },
+    userId: { type: String, required: false },
+    name: { type: String, required: true },
     course: { type: String, required: true },
-    phone: { type: String },
-    zipcode: { type: String },
-    name: { type: String },
-    email: { type: String },
-    status: { type: String, default: "pending" },
+    phone: { type: String, required: true },
+    email: { type: String, required: true },
+    zipcode: { type: String, required: false },
+    status: {
+      type: String,
+      required: true,
+      enum: ["submitted", "reviewed", "accepted", "rejected"],
+      default: "submitted",
+    },
   },
-  { timestamps: true }
+  { timestamps: true },
+);
+
+// --- Inquiries (Career) ---
+export interface IInquiry extends Document {
+  userId?: string;
+  name: string;
+  path: string; // The selected career path
+  phone: string;
+  email: string;
+  status: "submitted" | "reviewed" | "accepted" | "rejected";
+  subscribe: boolean;
+  getTips: boolean;
+  sellCreation: boolean;
+  loanFacility: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const InquirySchema: Schema = new Schema(
+  {
+    userId: { type: String, required: false },
+    name: { type: String, required: true },
+    path: { type: String, required: true },
+    phone: { type: String, required: true },
+    email: { type: String, required: true },
+    status: {
+      type: String,
+      required: true,
+      enum: ["submitted", "reviewed", "accepted", "rejected"],
+      default: "submitted",
+    },
+    subscribe: { type: Boolean, default: false },
+    getTips: { type: Boolean, default: false },
+    sellCreation: { type: Boolean, default: false },
+    loanFacility: { type: Boolean, default: false },
+  },
+  { timestamps: true },
 );
 
 // --- Gallery Images (Base64 approach) ---
@@ -91,12 +141,22 @@ const GalleryImageSchema = new Schema<IGalleryImage>(
     base64Data: { type: String, required: true },
     filename: { type: String, required: true },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Next.js Hot Reload safety (models are cached between reloads)
-export const User = mongoose.models.User || mongoose.model<IUser>("User", UserSchema);
-export const Conversation = mongoose.models.Conversation || mongoose.model<IConversation>("Conversation", ConversationSchema);
-export const Message = mongoose.models.Message || mongoose.model<IMessage>("Message", MessageSchema);
-export const Application = mongoose.models.Application || mongoose.model<IApplication>("Application", ApplicationSchema);
-export const GalleryImage = mongoose.models.GalleryImage || mongoose.model<IGalleryImage>("GalleryImage", GalleryImageSchema);
+export const User =
+  mongoose.models.User || mongoose.model<IUser>("User", UserSchema);
+export const Conversation =
+  mongoose.models.Conversation ||
+  mongoose.model<IConversation>("Conversation", ConversationSchema);
+export const Message =
+  mongoose.models.Message || mongoose.model<IMessage>("Message", MessageSchema);
+export const Admission =
+  mongoose.models.Admission ||
+  mongoose.model<IAdmission>("Admission", AdmissionSchema);
+export const Inquiry =
+  mongoose.models.Inquiry || mongoose.model<IInquiry>("Inquiry", InquirySchema);
+export const GalleryImage =
+  mongoose.models.GalleryImage ||
+  mongoose.model<IGalleryImage>("GalleryImage", GalleryImageSchema);

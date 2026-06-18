@@ -1,11 +1,13 @@
 "use client";
 import type React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import useSWR from "swr";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   Form,
   FormControl,
@@ -15,7 +17,7 @@ import {
 } from "@/components/ui/form";
 import { toast } from "sonner";
 import { useAuthStore } from "@/store/useAuthStore";
-import { Phone, MapPin, Info } from "lucide-react";
+import { Phone, MapPin, Info, CheckCircle2, Clock, XCircle } from "lucide-react";
 import type { Course } from "@/lib/CourseData";
 
 const GoogleIcon = () => (
@@ -41,11 +43,19 @@ interface EnrollmentFormProps {
   course: Course | typeof import("@/lib/CourseData").diplomaCourse;
 }
 
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
 const EnrollmentForm: React.FC<EnrollmentFormProps> = ({ course }) => {
   const [isApplying, setIsApplying] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Zustand Global State
-  const { isAuthenticated, signInWithGoogle } = useAuthStore();
+  const { isAuthenticated, user, signInWithGoogle } = useAuthStore();
+
+  const { data, mutate, isLoading } = useSWR(
+    isAuthenticated && user?.uid ? `/api/admissions?userId=${user.uid}` : null,
+    fetcher
+  );
 
   const form = useForm<z.infer<typeof enrollmentSchema>>({
     resolver: zodResolver(enrollmentSchema),
@@ -56,6 +66,10 @@ const EnrollmentForm: React.FC<EnrollmentFormProps> = ({ course }) => {
     }
   });
 
+  useEffect(() => {
+    form.setValue("course", course.name);
+  }, [course.name, form]);
+
   const handleGoogleSignIn = async () => {
     try {
       await signInWithGoogle();
@@ -64,16 +78,53 @@ const EnrollmentForm: React.FC<EnrollmentFormProps> = ({ course }) => {
     }
   };
 
-  const handleApplyNow = async () => {
+  const handleApplyNow = async (values: EnrollmentFormValues) => {
+    if (!user) return;
     setIsApplying(true);
     try {
-      // In future, save this to MongoDB applications collection
+      const res = await fetch("/api/enroll", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user.uid,
+          firstName: user.displayName?.split(" ")[0] || "",
+          lastName: user.displayName?.split(" ").slice(1).join(" ") || "",
+          email: user.email,
+          course: values.course,
+          phone: values.phone,
+          pincode: values.zipcode,
+        }),
+      });
+      
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || "Failed to submit application");
+      
       toast.success(`Application for ${course.name} submitted successfully!`);
+      mutate(); // Refresh the user's applications
     } catch (err) {
-      toast.error("Failed to submit application.");
+      toast.error(err instanceof Error ? err.message : "Failed to submit application.");
       console.error(err);
     } finally {
       setIsApplying(false);
+    }
+  };
+
+  const handleDeleteApplication = async (id: string) => {
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`/api/admissions/${id}`, {
+        method: "DELETE",
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || "Failed to delete application");
+      
+      toast.success("Previous application cleared. You can now apply again!");
+      mutate(); // Refresh the user's applications
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to delete application.");
+      console.error(err);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -99,7 +150,66 @@ const EnrollmentForm: React.FC<EnrollmentFormProps> = ({ course }) => {
     );
   }
 
-  // --- UI STATE 2: AUTHENTICATED FORM ---
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-12">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  // Check if user already applied for any admission
+  const existingApp = data?.applications?.[0];
+
+  // --- UI STATE 2: ALREADY APPLIED ---
+  if (existingApp) {
+    if (existingApp.status === "rejected") {
+      return (
+        <div className="flex flex-col items-center justify-center py-12 px-6 text-center bg-card/50 rounded-2xl border border-border">
+          <XCircle className="w-12 h-12 text-destructive mb-4" />
+          <h4 className="text-2xl font-serif font-bold text-foreground mb-2">Application Rejected</h4>
+          <p className="text-muted-foreground mb-6 font-sans text-base max-w-md">
+            Hey, sorry, your previous application for <strong className="text-foreground">{existingApp.course}</strong> got rejected. You can clear this status and try submitting a newer application.
+          </p>
+          <Button 
+            onClick={() => handleDeleteApplication(existingApp._id as string)}
+            disabled={isDeleting}
+            className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-5 px-6 rounded-xl shadow-md transition-all font-sans"
+          >
+            {isDeleting ? "Clearing..." : "Try Newer Application"}
+          </Button>
+        </div>
+      );
+    }
+
+    const statusIcons = {
+      submitted: <Clock className="w-12 h-12 text-blue-500 mb-4" />,
+      reviewed: <Info className="w-12 h-12 text-yellow-500 mb-4" />,
+      accepted: <CheckCircle2 className="w-12 h-12 text-green-500 mb-4" />,
+    };
+    
+    return (
+      <div className="flex flex-col items-center justify-center py-12 px-6 text-center bg-card/50 rounded-2xl border border-border">
+        {statusIcons[existingApp.status as keyof typeof statusIcons] || <Clock className="w-12 h-12 text-primary mb-4" />}
+        <h4 className="text-2xl font-serif font-bold text-foreground mb-2">Application Submitted</h4>
+        <p className="text-muted-foreground mb-4 font-sans text-base">
+          You already have an active application for <strong className="text-foreground">{existingApp.course}</strong>.
+        </p>
+        <div className="flex items-center gap-2">
+          <span className="font-semibold text-sm">Status:</span>
+          <Badge variant="outline" className={`capitalize text-sm ${
+            existingApp.status === "accepted" ? "text-green-500 border-green-500 bg-green-500/10" :
+            existingApp.status === "reviewed" ? "text-yellow-500 border-yellow-500 bg-yellow-500/10" : 
+            "text-blue-500 border-blue-500 bg-blue-500/10"
+          }`}>
+            {existingApp.status}
+          </Badge>
+        </div>
+      </div>
+    );
+  }
+
+  // --- UI STATE 3: AUTHENTICATED FORM ---
   return (
     <div className="flex flex-col h-full w-full">
       <Form {...form}>
