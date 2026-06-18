@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import useSWR from "swr";
-import { Send, User as UserIcon } from "lucide-react";
+import { Send, User as UserIcon, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import Image from "next/image";
@@ -76,7 +76,7 @@ export default function AdminChatbox() {
     <div className="flex bg-card border border-border rounded-2xl h-[600px] overflow-hidden shadow-sm">
       
       {/* LEFT SIDEBAR: User List */}
-      <div className="w-1/3 border-r border-border bg-secondary/10 overflow-y-auto flex flex-col">
+      <div className={`${selectedConversation ? 'hidden md:flex' : 'flex'} w-full md:w-1/3 border-r border-border bg-secondary/10 overflow-y-auto flex-col shrink-0`}>
         <div className="p-4 border-b border-border bg-card sticky top-0 z-10">
           <h2 className="font-bold text-foreground">User Inquiries</h2>
         </div>
@@ -122,7 +122,7 @@ export default function AdminChatbox() {
       </div>
 
       {/* RIGHT PANE: Chat Area */}
-      <div className="flex-1 flex flex-col bg-background relative">
+      <div className={`${!selectedConversation ? 'hidden md:flex' : 'flex'} flex-1 flex-col bg-background relative min-w-0`}>
         {!selectedConversation ? (
           <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
             Select a conversation from the left to start chatting.
@@ -130,29 +130,24 @@ export default function AdminChatbox() {
         ) : (
           <>
             {/* Header */}
-            <div className="p-4 border-b border-border bg-card flex justify-between items-center">
-              <div className="flex items-center gap-3">
-                {selectedConversation.userInfo?.photoURL && (
-                  <div className="relative w-10 h-10 rounded-full overflow-hidden shrink-0 border border-border">
-                    <Image src={selectedConversation.userInfo.photoURL} alt="User" fill className="object-cover" />
-                  </div>
-                )}
-                <div>
-                  <h3 className="font-bold text-foreground">
-                    {selectedConversation.userInfo?.displayName || "Unknown User"}
-                  </h3>
-                  <p className="text-xs text-muted-foreground">
-                    {selectedConversation.userInfo?.email}
+            <div className="p-4 border-b border-border bg-card flex items-center gap-3 shrink-0">
+              {selectedConversation.userInfo?.photoURL && (
+                <div className="relative w-10 h-10 rounded-full overflow-hidden shrink-0 border border-border">
+                  <Image src={selectedConversation.userInfo.photoURL} alt="User" fill className="object-cover" />
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <h3 className="font-bold text-foreground truncate">
+                  {selectedConversation.userInfo?.displayName || "Unknown User"}
+                </h3>
+                <p className="text-xs text-muted-foreground truncate">
+                  {selectedConversation.userInfo?.email}
                     {(messages.length > 0 || selectedConversation.updatedAt) && 
                       ` • Last updated: ${new Date(
                         messages.length > 0 ? messages[messages.length - 1].createdAt : selectedConversation.updatedAt
                       ).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`
                     }
                   </p>
-                </div>
-              </div>
-              <div className="text-xs font-semibold bg-secondary px-3 py-1 rounded-full text-foreground">
-                {selectedConversation.context}
               </div>
             </div>
 
@@ -168,27 +163,36 @@ export default function AdminChatbox() {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Input */}
-            <div className="p-4 bg-card border-t border-border flex gap-3 items-end">
-              <Textarea 
-                placeholder="Type your reply to the user..."
-                value={replyText}
-                onChange={(e) => setReplyText(e.target.value)}
-                maxLength={500}
-                className="min-h-[60px] max-h-[150px] resize-none bg-background rounded-xl focus-visible:ring-primary text-sm"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-                    e.preventDefault();
-                    handleSendReply();
-                  }
-                }}
-              />
+            {/* Input & Controls */}
+            <div className="p-4 bg-card border-t border-border flex flex-col gap-3">
+              <div className="flex gap-3 items-end">
+                <Textarea 
+                  placeholder="Type your reply to the user..."
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
+                  maxLength={500}
+                  className="min-h-[60px] max-h-[150px] resize-none bg-background rounded-xl focus-visible:ring-primary text-sm"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                      e.preventDefault();
+                      handleSendReply();
+                    }
+                  }}
+                />
+                <Button 
+                  onClick={handleSendReply}
+                  disabled={!replyText.trim()}
+                  className="shrink-0 h-12 w-12 rounded-full p-0 flex items-center justify-center bg-primary text-primary-foreground shadow-md hover:bg-primary/90"
+                >
+                  <Send className="w-5 h-5 -ml-0.5" />
+                </Button>
+              </div>
               <Button 
-                onClick={handleSendReply}
-                disabled={!replyText.trim()}
-                className="shrink-0 h-12 w-12 rounded-full p-0 flex items-center justify-center bg-primary text-primary-foreground shadow-md hover:bg-primary/90"
+                variant="outline" 
+                className="w-full md:hidden flex items-center justify-center text-muted-foreground border-border hover:bg-secondary/50" 
+                onClick={() => setSelectedConversation(null)}
               >
-                <Send className="w-5 h-5 -ml-0.5" />
+                <ArrowLeft className="w-4 h-4 mr-2" /> Back to User Inquiries
               </Button>
             </div>
           </>
