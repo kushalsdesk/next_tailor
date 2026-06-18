@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import connectToDB from "@/lib/mongoose";
 import { Message, Conversation } from "@/lib/models";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: Request) {
   try {
     await connectToDB();
