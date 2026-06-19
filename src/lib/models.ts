@@ -128,16 +128,18 @@ const InquirySchema: Schema = new Schema(
   { timestamps: true },
 );
 
-// --- Gallery Images (Base64 approach) ---
+// --- Gallery Images (Buffer approach) ---
 export interface IGalleryImage extends Document {
-  base64Data: string; // The huge base64 string
-  filename: string;
+  data: Buffer;
+  contentType: string;
+  order: number;
 }
 
 const GalleryImageSchema = new Schema<IGalleryImage>(
   {
-    base64Data: { type: String, required: true },
-    filename: { type: String, required: true },
+    data: { type: Buffer, required: true },
+    contentType: { type: String, required: true },
+    order: { type: Number, required: true, default: 0 },
   },
   { timestamps: true },
 );

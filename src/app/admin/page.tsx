@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import AdminChatbox from "@/components/admin/AdminChatbox";
 import AdminApplications from "@/components/admin/AdminApplications";
 import AdminUsers from "@/components/admin/AdminUsers";
+import AdminGallery from "@/components/admin/AdminGallery";
 import { FileText } from "lucide-react";
 import useSWR from "swr";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
@@ -300,11 +301,7 @@ export default function AdminPage() {
           )}
 
           {activeTab === "gallery" && (
-            <div className="bg-card border border-border rounded-2xl p-12 text-center text-muted-foreground shadow-sm">
-              <ImageIcon className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <h2 className="text-xl font-bold text-foreground mb-2">Manage Gallery</h2>
-              <p>Firestore Storage integration pending for image uploads.</p>
-            </div>
+            <AdminGallery />
           )}
 
           {activeTab === "users" && (

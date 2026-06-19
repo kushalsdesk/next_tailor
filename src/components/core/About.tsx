@@ -3,11 +3,12 @@
 import { useRef, useState } from "react";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Briefcase, CheckCircle, GraduationCap, Users, Clock, Target, Scissors, ChevronLeft, ChevronRight } from "lucide-react";
+import { Briefcase, CheckCircle, GraduationCap, Users, Clock, Target, Scissors, ChevronLeft, ChevronRight, Loader2, ImageIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useDataStore } from "@/store/useDataStore";
+import useSWR from "swr";
 
+// --- EXISTING DATA STRINGS ---
 const testimonials = [
   { quote: "The best tailoring institute! I started my own boutique within 6 months.", author: "Priya S." },
   { quote: "Amazing instructors and completely hands-on learning.", author: "Anjali M." },
@@ -55,14 +56,23 @@ const features = [
   },
 ];
 
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
 const About = () => {
   const sectionRef = useRef<HTMLElement>(null);
   const [currentImg, setCurrentImg] = useState(0);
 
-  const galleryImages = useDataStore((state) => state.galleryImages);
+  // Fetch Gallery Images from MongoDB API
+  const { data: galleryItems, isLoading } = useSWR<{ _id: string; order: number }[]>("/api/gallery", fetcher);
 
-  const nextImg = () => setCurrentImg((prev) => (prev + 1) % galleryImages.length);
-  const prevImg = () => setCurrentImg((prev) => (prev - 1 + galleryImages.length) % galleryImages.length);
+  const galleryImages = galleryItems?.map(item => `/api/gallery/${item._id}/image`) || [];
+
+  const nextImg = () => {
+    if (galleryImages.length > 0) setCurrentImg((prev) => (prev + 1) % galleryImages.length);
+  };
+  const prevImg = () => {
+    if (galleryImages.length > 0) setCurrentImg((prev) => (prev - 1 + galleryImages.length) % galleryImages.length);
+  };
 
   return (
     <section id="about" ref={sectionRef} className="relative z-10 pt-24 bg-background flex flex-col">
@@ -115,46 +125,62 @@ const About = () => {
 
             {/* Right Content - Inline Gallery & Certificate */}
             <div className="flex flex-col gap-6 z-10">
-              {/* Changed bg-secondary to bg-background to avoid purple tint */}
               <div className="bg-background rounded-[1.5rem] p-6 border border-border shadow-sm">
                 <div className="flex justify-between items-center mb-6">
                   <h4 className="text-foreground font-serif font-bold text-xl">
                     Campus & Certifications
                   </h4>
                   <div className="flex gap-2">
-                    <button onClick={prevImg} className="p-2 bg-background border border-border rounded-full shadow-sm hover:text-primary transition-colors"><ChevronLeft className="w-5 h-5"/></button>
-                    <button onClick={nextImg} className="p-2 bg-background border border-border rounded-full shadow-sm hover:text-primary transition-colors"><ChevronRight className="w-5 h-5"/></button>
+                    <button onClick={prevImg} disabled={galleryImages.length === 0} className="p-2 bg-background border border-border rounded-full shadow-sm hover:text-primary transition-colors disabled:opacity-50"><ChevronLeft className="w-5 h-5"/></button>
+                    <button onClick={nextImg} disabled={galleryImages.length === 0} className="p-2 bg-background border border-border rounded-full shadow-sm hover:text-primary transition-colors disabled:opacity-50"><ChevronRight className="w-5 h-5"/></button>
                   </div>
                 </div>
                 
-                <div className="relative aspect-[4/3] w-full rounded-xl overflow-hidden bg-white border border-border shadow-sm">
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={currentImg}
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 1.05 }}
-                      transition={{ duration: 0.3 }}
-                      className="absolute inset-0"
-                    >
-                      <Image
-                        src={galleryImages[currentImg]}
-                        alt="Gallery"
-                        fill
-                        className="object-contain p-2"
+                <div className="relative aspect-[4/3] w-full rounded-xl overflow-hidden bg-white border border-border shadow-sm flex items-center justify-center">
+                  {isLoading ? (
+                    <div className="flex flex-col items-center text-muted-foreground">
+                      <Loader2 className="w-8 h-8 animate-spin text-primary opacity-50 mb-2" />
+                      <span className="text-sm">Loading Gallery...</span>
+                    </div>
+                  ) : galleryImages.length === 0 ? (
+                    <div className="flex flex-col items-center text-muted-foreground opacity-30">
+                      <ImageIcon className="w-12 h-12 mb-2" />
+                      <span className="text-sm font-medium">No Images Available</span>
+                    </div>
+                  ) : (
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={currentImg}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 1.05 }}
+                        transition={{ duration: 0.3 }}
+                        className="absolute inset-0"
+                      >
+                        <Image
+                          src={galleryImages[currentImg]}
+                          alt={`Campus image ${currentImg + 1}`}
+                          fill
+                          className="object-contain p-2"
+                          unoptimized
+                        />
+                      </motion.div>
+                    </AnimatePresence>
+                  )}
+                </div>
+                
+                {/* Dots indicator */}
+                {galleryImages.length > 0 && (
+                  <div className="flex justify-center gap-3 mt-6">
+                    {galleryImages.map((_, idx) => (
+                      <button 
+                        key={idx} 
+                        onClick={() => setCurrentImg(idx)}
+                        className={`h-2 rounded-full transition-all ${currentImg === idx ? 'bg-primary w-8' : 'bg-border hover:bg-primary/50 w-2'}`}
                       />
-                    </motion.div>
-                  </AnimatePresence>
-                </div>
-                <div className="flex justify-center gap-3 mt-6">
-                  {galleryImages.map((_, idx) => (
-                    <button 
-                      key={idx} 
-                      onClick={() => setCurrentImg(idx)}
-                      className={`h-2 rounded-full transition-all ${currentImg === idx ? 'bg-primary w-8' : 'bg-border hover:bg-primary/50 w-2'}`}
-                    />
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
