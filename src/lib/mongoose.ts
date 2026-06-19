@@ -1,13 +1,5 @@
 import mongoose from "mongoose";
 
-const MONGODB_URI = process.env.MONGODB_URI!;
-
-if (!MONGODB_URI) {
-  throw new Error(
-    "Please define the MONGODB_URI environment variable inside .env.local"
-  );
-}
-
 // Global caching for Mongoose connection in Serverless Environments
 declare global {
   // eslint-disable-next-line no-var
@@ -21,6 +13,12 @@ if (!cached) {
 }
 
 async function connectToDB() {
+  const MONGODB_URI = process.env.MONGODB_URI;
+
+  if (!MONGODB_URI) {
+    throw new Error("Please define the MONGODB_URI environment variable");
+  }
+
   if (cached!.conn) {
     return cached!.conn;
   }
