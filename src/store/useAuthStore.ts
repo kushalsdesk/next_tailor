@@ -99,8 +99,9 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ isAuthLoading: true });
       await signInWithPopup(auth, googleProvider);
       // The onAuthStateChanged listener will handle the UI update automatically
-    } catch (error: any) {
-      if (error?.code === 'auth/popup-blocked') {
+    } catch (error) {
+      const err = error as { code?: string };
+      if (err?.code === 'auth/popup-blocked') {
         console.warn("Popup blocked by browser, falling back to redirect...");
         await signInWithRedirect(auth, googleProvider);
       } else {
