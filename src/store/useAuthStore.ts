@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { auth, googleProvider } from '@/lib/firebase';
-import { onAuthStateChanged, signInWithPopup, signOut, signInWithEmailAndPassword } from 'firebase/auth';
+import { onAuthStateChanged, signInWithPopup, signInWithRedirect, signOut, signInWithEmailAndPassword } from 'firebase/auth';
 
 export interface UserProfile {
   uid: string;
@@ -99,10 +99,15 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ isAuthLoading: true });
       await signInWithPopup(auth, googleProvider);
       // The onAuthStateChanged listener will handle the UI update automatically
-    } catch (error) {
-      console.error("Google Sign-In Error:", error);
-      set({ isAuthLoading: false });
-      throw error;
+    } catch (error: any) {
+      if (error?.code === 'auth/popup-blocked') {
+        console.warn("Popup blocked by browser, falling back to redirect...");
+        await signInWithRedirect(auth, googleProvider);
+      } else {
+        console.error("Google Sign-In Error:", error);
+        set({ isAuthLoading: false });
+        throw error;
+      }
     }
   },
 
