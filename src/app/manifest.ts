@@ -12,16 +12,16 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: "#000000",
     icons: [
       {
-        src: "/icon.png",
+        src: "/asha_logo.jpg",
         sizes: "192x192",
-        type: "image/png",
-        purpose: "maskable"
+        type: "image/jpg",
+        purpose: "maskable",
       },
       {
-        src: "/icon.png",
+        src: "/asha_logo.jpg",
         sizes: "512x512",
-        type: "image/png",
-        purpose: "any"
+        type: "image/jpg",
+        purpose: "any",
       },
     ],
   };
