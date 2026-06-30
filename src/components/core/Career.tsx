@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import { useOnClickOutside } from "@/hooks/useOnClickOutside";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import ContactForm from "@/components/modals/ContactForm.modal";
@@ -20,6 +21,8 @@ const Career = () => {
   const sectionRef = useRef<HTMLElement>(null);
   const [selectedCareer, setSelectedCareer] = useState(opportunities[0]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  useOnClickOutside(dropdownRef, () => setIsDropdownOpen(false));
 
   useEffect(() => {
     if (sectionRef.current) {
@@ -36,10 +39,14 @@ const Career = () => {
     };
 
     window.addEventListener("hashchange", handleHashChange);
+    let timeoutId: NodeJS.Timeout;
     if (window.location.hash === "#career") {
-      setTimeout(handleHashChange, 100);
+      timeoutId = setTimeout(handleHashChange, 100);
     }
-    return () => window.removeEventListener("hashchange", handleHashChange);
+    return () => {
+      window.removeEventListener("hashchange", handleHashChange);
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, []);
 
   return (
@@ -73,7 +80,7 @@ const Career = () => {
             {/* Custom Dropdown Selection */}
             <div className="relative z-40">
               <label className="block text-sm font-semibold text-muted-foreground mb-3 tracking-wide uppercase">Select a Career Path</label>
-              <div className="relative">
+              <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className={`w-full bg-background text-foreground border-2 border-border hover:border-primary/50 rounded-xl p-4 font-serif text-xl font-bold flex items-center justify-between transition-all shadow-sm ${isDropdownOpen ? "border-primary" : ""}`}
@@ -96,7 +103,7 @@ const Career = () => {
                       transition={{ duration: 0.2 }}
                       className="absolute top-full left-0 right-0 mt-2 bg-card border border-border shadow-2xl rounded-xl z-50 overflow-hidden"
                     >
-                      <div className="max-h-[40vh] overflow-y-auto p-2">
+                      <div className="p-2">
                         {opportunities.map((opportunity) => (
                           <button
                             key={opportunity.title}

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { useOnClickOutside } from "@/hooks/useOnClickOutside";
 import { motion, AnimatePresence } from "framer-motion";
 import { courses, diplomaCourse } from "@/lib/CourseData";
 import { Clock, IndianRupee, ScrollText, ChevronDown, CheckCircle2 } from "lucide-react";
@@ -11,6 +12,8 @@ const allCourses = [...courses, diplomaCourse];
 export default function Application() {
   const [selectedCourse, setSelectedCourse] = useState(allCourses[0]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  useOnClickOutside(dropdownRef, () => setIsDropdownOpen(false));
 
   return (
     <section id="application" className="py-24 bg-secondary/10 relative border-y border-border">
@@ -31,7 +34,7 @@ export default function Application() {
           {/* Custom Dropdown Selection */}
           <div className="relative z-40">
             <label className="block text-sm font-semibold text-muted-foreground mb-3 tracking-wide uppercase">Select a Course to Apply For</label>
-            <div className="relative">
+            <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                 className={`w-full bg-background text-foreground border-2 border-border hover:border-primary/50 rounded-xl p-4 font-serif text-xl font-bold flex items-center justify-between transition-all shadow-sm ${isDropdownOpen ? "border-primary" : ""}`}
@@ -49,7 +52,7 @@ export default function Application() {
                     transition={{ duration: 0.2 }}
                     className="absolute top-full left-0 right-0 mt-2 bg-card border border-border shadow-2xl rounded-xl z-50 overflow-hidden"
                   >
-                    <div className="max-h-[40vh] overflow-y-auto p-2">
+                    <div className="p-2">
                       {allCourses.map((c) => (
                         <button
                           key={c.name}

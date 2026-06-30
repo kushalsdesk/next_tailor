@@ -95,7 +95,7 @@ const Navbar = () => {
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.3, ease: "easeOut" }}
-        className="fixed top-0 left-0 right-0 bg-background border-b border-border z-50 shadow-sm"
+        className="fixed top-0 left-0 right-0 bg-background border-b border-border z-[100] shadow-sm"
       >
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center h-20">
@@ -174,7 +174,7 @@ const Navbar = () => {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 10 }}
                       transition={{ duration: 0.2 }}
-                      className="absolute top-full right-0 mt-6 bg-card border border-border shadow-xl rounded-xl z-50 min-w-[380px] overflow-hidden"
+                      className="absolute top-full right-0 mt-6 bg-card border border-border shadow-xl rounded-xl z-[100] min-w-[380px] overflow-hidden"
                     >
                       <div className="p-2">
                         {timings.items.map((subItem, index) => (
@@ -259,7 +259,7 @@ const Navbar = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
-            className="lg:hidden fixed inset-0 top-20 bg-background z-40 overflow-y-auto border-t border-border"
+            className="lg:hidden fixed inset-0 top-20 bg-background z-[100] overflow-y-auto border-t border-border"
           >
             <div className="container mx-auto px-6 py-8 flex flex-col gap-6">
               <button

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useOnClickOutside } from "@/hooks/useOnClickOutside";
 import { motion, AnimatePresence } from "framer-motion";
 import { courses, diplomaCourse } from "@/lib/CourseData";
 import { ChevronDown, CheckCircle2, BookOpen } from "lucide-react";
@@ -11,6 +12,8 @@ const Courses = () => {
   const [selectedCourse, setSelectedCourse] = useState(allCourses[0]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  useOnClickOutside(dropdownRef, () => setIsDropdownOpen(false));
 
   useEffect(() => {
     if (sectionRef.current) {
@@ -27,10 +30,14 @@ const Courses = () => {
     };
 
     window.addEventListener("hashchange", handleHashChange);
+    let timeoutId: NodeJS.Timeout;
     if (window.location.hash === "#courses") {
-      setTimeout(handleHashChange, 100);
+      timeoutId = setTimeout(handleHashChange, 100);
     }
-    return () => window.removeEventListener("hashchange", handleHashChange);
+    return () => {
+      window.removeEventListener("hashchange", handleHashChange);
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, []);
 
   return (
@@ -52,7 +59,7 @@ const Courses = () => {
 
         {/* Sticky Dropdown Selection */}
         <div className="sticky top-20 z-40 bg-background/95 backdrop-blur-md py-4 mb-12 -mx-4 px-4 md:mx-0 md:px-0">
-          <div className="max-w-2xl mx-auto relative">
+          <div className="max-w-2xl mx-auto relative" ref={dropdownRef}>
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               className={`w-full bg-card text-foreground border-2 border-border hover:border-primary/50 rounded-xl p-5 font-serif text-2xl font-bold flex items-center justify-between transition-all shadow-md ${isDropdownOpen ? "border-primary" : ""}`}
@@ -70,7 +77,7 @@ const Courses = () => {
                   transition={{ duration: 0.2 }}
                   className="absolute top-full left-0 right-0 mt-2 bg-card border border-border shadow-2xl rounded-xl z-50 overflow-hidden"
                 >
-                  <div className="max-h-[50vh] overflow-y-auto p-2">
+                  <div className="p-2">
                     {allCourses.map((c) => (
                       <button
                         key={c.name}

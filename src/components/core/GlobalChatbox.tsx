@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 import useSWR from "swr";
-import { MessageCircle, X, Send, User as UserIcon } from "lucide-react";
+import { MessageCircle, X, Send, User as UserIcon, ArrowLeft } from "lucide-react";
+import { useOnClickOutside } from "@/hooks/useOnClickOutside";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import Image from "next/image";
@@ -35,6 +36,8 @@ export default function GlobalChatbox() {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatboxRef = useRef<HTMLDivElement>(null);
+  useOnClickOutside(chatboxRef, () => setIsOpen(false));
 
   const { user, isAuthenticated, signInWithGoogle } = useAuthStore();
 
@@ -143,7 +146,7 @@ export default function GlobalChatbox() {
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-0 right-0 sm:bottom-6 sm:right-6 w-full h-full sm:w-[380px] sm:h-[600px] bg-card sm:rounded-2xl shadow-2xl flex flex-col z-50 overflow-hidden border border-border animate-in slide-in-from-bottom-5">
+        <div ref={chatboxRef} className="fixed bottom-0 right-0 sm:bottom-6 sm:right-6 w-full h-full sm:w-[380px] sm:h-[600px] bg-card sm:rounded-2xl shadow-2xl flex flex-col z-[110] overflow-hidden border border-border animate-in slide-in-from-bottom-5">
           {/* Header */}
           <div className="bg-primary text-primary-foreground p-4 flex justify-between items-center shrink-0">
             <div className="flex items-center gap-3">
@@ -159,8 +162,10 @@ export default function GlobalChatbox() {
                 </p>
               </div>
             </div>
-            <button onClick={() => setIsOpen(false)} className="p-2 hover:bg-white/20 rounded-full transition-colors">
-              <X className="w-5 h-5" />
+            
+            {/* Desktop Close Button */}
+            <button onClick={() => setIsOpen(false)} className="hidden sm:flex items-center justify-center p-2 hover:bg-white/20 rounded-full transition-colors">
+              <X className="w-6 h-6 text-white" />
             </button>
           </div>
 
@@ -214,6 +219,14 @@ export default function GlobalChatbox() {
 
                 {/* Input box */}
                 <div className="p-3 bg-card border-t border-border flex items-end gap-2 shrink-0">
+                  {/* Mobile Back Button (Bottom Left) */}
+                  <button 
+                    onClick={() => setIsOpen(false)} 
+                    className="flex sm:hidden items-center justify-center h-12 w-10 shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <ArrowLeft className="w-6 h-6" />
+                  </button>
+
                   <Textarea 
                     placeholder="Type a message..." 
                     value={message}

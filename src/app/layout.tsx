@@ -2,7 +2,7 @@ import type React from "react";
 import type { Metadata } from "next";
 import "./globals.css";
 import { Playfair_Display, Inter } from "next/font/google";
-import { Toaster } from "sonner";
+import ClientToaster from "@/components/core/ClientToaster";
 import InstallPWA from "@/components/core/InstallPWA";
 import Navbar from "@/components/core/Navbar";
 import Footer from "@/components/core/Footer";
@@ -75,7 +75,7 @@ export default function RootLayout({
             <Footer />
           </Suspense>
         </AuthProvider>
-        <Toaster richColors position="top-center" />
+        <ClientToaster />
         <InstallPWA />
       </body>
     </html>

@@ -17,8 +17,8 @@ export const courses: Course[] = [
     name: "Basic Tailoring Course",
     duration: "6 months",
     fee: {
-      admission: "₹400",
-      monthly: "₹500",
+      admission: "₹500",
+      monthly: "₹600",
       exam: "₹800",
     },
     syllabus: {
@@ -75,8 +75,8 @@ export const courses: Course[] = [
     name: "Blouse Designing Course",
     duration: "3 months",
     fee: {
-      admission: "₹550",
-      monthly: "₹500",
+      admission: "₹500",
+      monthly: "₹750",
       exam: "₹800",
     },
     syllabus: {
@@ -110,8 +110,8 @@ export const courses: Course[] = [
     name: "Kurti Designing Course",
     duration: "3 months",
     fee: {
-      admission: "₹550",
-      monthly: "₹500",
+      admission: "₹500",
+      monthly: "₹750",
       exam: "₹800",
     },
     syllabus: {
@@ -140,11 +140,11 @@ export const courses: Course[] = [
     },
   },
   {
-    name: "Saree Designing Course",
+    name: "Advanced Dress Designing Course",
     duration: "3 months",
     fee: {
-      admission: "₹600",
-      monthly: "₹650",
+      admission: "₹500",
+      monthly: "₹800",
       exam: "₹800",
     },
     syllabus: {
@@ -167,8 +167,8 @@ export const courses: Course[] = [
     name: "Recycle & Reuse Old Clothes",
     duration: "3 months",
     fee: {
-      admission: "₹550",
-      monthly: "₹500",
+      admission: "₹500",
+      monthly: "₹650",
       exam: "₹800",
     },
     syllabus: {
@@ -198,9 +198,9 @@ export const diplomaCourse = {
   name: "Diploma in Tailoring and Dress Designing",
   duration: "1 year",
   fee: {
-    admission: "₹650",
-    monthly: "₹600",
-    exam: "₹1000",
+    admission: "₹500",
+    monthly: "₹700",
+    exam: "₹800",
   },
   semesters: {
     "First Semester (Basic Tailoring)": {
