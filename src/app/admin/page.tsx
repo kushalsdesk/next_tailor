@@ -276,7 +276,7 @@ export default function AdminPage() {
                         </linearGradient>
                       </defs>
                       <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                      <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                      <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#333333" opacity={0.2} />
                       <Tooltip 
                         contentStyle={{ backgroundColor: '#1e1e2f', borderColor: '#333333', borderRadius: '8px', color: '#fff' }}
