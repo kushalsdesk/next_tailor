@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { auth, googleProvider } from '@/lib/firebase';
-import { onAuthStateChanged, signInWithPopup, signOut, signInWithEmailAndPassword, browserPopupRedirectResolver } from 'firebase/auth';
+import { onAuthStateChanged, signInWithPopup, signOut, signInWithEmailAndPassword } from 'firebase/auth';
 
 export interface UserProfile {
   uid: string;
@@ -95,15 +95,13 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   signInWithGoogle: async () => {
-    // Crucial for strict browsers: We MUST call the popup immediately before any state changes, 
-    // otherwise Safari/Mobile Chrome flags it as an un-trusted automated popup and blocks it.
     try {
-      await signInWithPopup(auth, googleProvider, browserPopupRedirectResolver);
       set({ isAuthLoading: true });
+      await signInWithPopup(auth, googleProvider);
+      // The onAuthStateChanged listener will handle the UI update automatically
     } catch (error) {
       console.error("Google Sign-In Error:", error);
       set({ isAuthLoading: false });
-      throw error;
     }
   },
 
